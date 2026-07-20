@@ -1,306 +1,632 @@
 import React from 'react';
 import {
-  StyleSheet,
-  Text,
   View,
-  TouchableOpacity,
+  Text,
   ScrollView,
-  SafeAreaView,
-  StatusBar,
-  Image,
+  Pressable,
+  StyleSheet,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
-import { typography } from '../../theme/fonts';
-import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
+import { radius } from '../../theme/radius';
+import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
 
-interface OrganizerDashboardProps {
-  navigation: any;
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+interface StatCardData {
+  id: string;
+  label: string;
+  value: string;
+  icon: IoniconName;
+  tint: string;
 }
 
-export default function OrganizerDashboard({ navigation }: OrganizerDashboardProps) {
-  const handleCreateEvent = () => {
-    navigation.navigate('CreateEventDetails');
-  };
+interface RegistrationItem {
+  id: string;
+  studentName: string;
+  eventName: string;
+  time: string;
+  status: 'Confirmed' | 'Pending' | 'Cancelled';
+}
 
-  const stats = [
-    { label: 'Active Events', value: '4', icon: 'activity', color: colors.secondary },
-    { label: 'Tickets Sold', value: '1,248', icon: 'tag', color: colors.primaryContainer },
-    { label: 'Total Revenue', value: '$24,850', icon: 'dollar-sign', color: colors.tertiary },
-  ];
+interface UpcomingEventItem {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+  venue: string;
+  seatsLeft: number;
+  status: 'Open' | 'Filling Fast' | 'Closed';
+}
 
-  const recentEvents = [
-    {
-      title: 'Global Fintech Summit 2026',
-      date: 'Aug 24, 2026',
-      tickets: '350/500',
-      status: 'Live',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=200&auto=format&fit=crop&q=60',
-    },
-    {
-      title: 'AI Product Workshop',
-      date: 'Sep 12, 2026',
-      tickets: '82/100',
-      status: 'Selling',
-      image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=200&auto=format&fit=crop&q=60',
-    },
-  ];
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: IoniconName;
+}
 
+const stats: StatCardData[] = [
+  { id: '1', label: 'Total Events', value: '18', icon: 'calendar-outline', tint: colors.primary },
+  { id: '2', label: 'Active Events', value: '5', icon: 'flash-outline', tint: colors.tertiary },
+  { id: '3', label: 'Registrations', value: '742', icon: 'people-outline', tint: colors.secondary },
+  { id: '4', label: 'Revenue', value: '₹28.4K', icon: 'wallet-outline', tint: colors.primaryContainer },
+];
+
+const quickActions: QuickAction[] = [
+  { id: '1', label: 'Create Event', icon: 'add-circle-outline' },
+  { id: '2', label: 'Manage Events', icon: 'file-tray-full-outline' },
+  { id: '3', label: 'Participants', icon: 'people-outline' },
+  { id: '4', label: 'Analytics', icon: 'bar-chart-outline' },
+  { id: '5', label: 'Certificates', icon: 'ribbon-outline' },
+  { id: '6', label: 'Announcements', icon: 'megaphone-outline' },
+];
+
+const recentRegistrations: RegistrationItem[] = [
+  { id: '1', studentName: 'Aarav Mehta', eventName: 'Encore Hackathon 2026', time: '5 min ago', status: 'Confirmed' },
+  { id: '2', studentName: 'Bhavika Patel', eventName: 'Cultural Night', time: '22 min ago', status: 'Pending' },
+  { id: '3', studentName: 'Rohan Iyer', eventName: 'AI/ML Workshop', time: '1 hr ago', status: 'Confirmed' },
+  { id: '4', studentName: 'Diya Shah', eventName: 'Cultural Night', time: '2 hr ago', status: 'Cancelled' },
+];
+
+const upcomingEvents: UpcomingEventItem[] = [
+  { id: '1', name: 'Cultural Night', date: '22 Jul', time: '6:00 PM', venue: 'Open Air Theatre', seatsLeft: 40, status: 'Filling Fast' },
+  { id: '2', name: 'AI/ML Workshop', date: '25 Jul', time: '10:00 AM', venue: 'Seminar Hall B', seatsLeft: 104, status: 'Open' },
+  { id: '3', name: 'Sports Meet', date: '02 Aug', time: '8:00 AM', venue: 'Ground', seatsLeft: 0, status: 'Closed' },
+];
+
+function initialsOf(name: string): string {
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function registrationStatusColor(status: RegistrationItem['status']): string {
+  if (status === 'Confirmed') return colors.tertiary;
+  if (status === 'Pending') return colors.primaryContainer;
+  return colors.error;
+}
+
+function eventStatusColor(status: UpcomingEventItem['status']): string {
+  if (status === 'Open') return colors.tertiary;
+  if (status === 'Filling Fast') return colors.primaryContainer;
+  return colors.error;
+}
+
+function WelcomeHeader() {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome back, Organizer</Text>
-          <Text style={styles.welcomeSub}>Here is how your events are performing today.</Text>
+    <View style={styles.headerRow}>
+      <View style={styles.headerLeft}>
+        <View style={styles.avatarCircle}>
+          <Text style={styles.avatarText}>SS</Text>
         </View>
+        <View>
+          <Text style={styles.greetingText}>Good afternoon,</Text>
+          <Text style={styles.nameText}>Sil Shah</Text>
+        </View>
+      </View>
+      <Pressable style={styles.notificationButton}>
+        <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
+        <View style={styles.notificationDot} />
+      </Pressable>
+    </View>
+  );
+}
 
-        {/* Stats Grid */}
+function StatCard({ item }: { item: StatCardData }) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIconChip, { backgroundColor: `${item.tint}1F` }]}>
+        <Ionicons name={item.icon} size={18} color={item.tint} />
+      </View>
+      <Text style={styles.statValue}>{item.value}</Text>
+      <Text style={styles.statLabel}>{item.label}</Text>
+    </View>
+  );
+}
+
+function FeaturedEventCard() {
+  const progress = 0.72;
+  return (
+    <View style={styles.featuredCard}>
+      <View style={styles.featuredBanner}>
+        <Ionicons name="trophy-outline" size={30} color={colors.onPrimary} />
+        <View style={styles.featuredBadge}>
+          <Text style={styles.featuredBadgeText}>Live</Text>
+        </View>
+      </View>
+      <View style={styles.featuredBody}>
+        <Text style={styles.featuredTitle}>Encore Hackathon 2026</Text>
+        <View style={styles.featuredMetaRow}>
+          <Ionicons name="time-outline" size={14} color={colors.onSurfaceVariant} />
+          <Text style={styles.featuredMetaText}>18 Jul 2026</Text>
+          <Ionicons
+            name="location-outline"
+            size={14}
+            color={colors.onSurfaceVariant}
+            style={styles.featuredMetaIconSpacer}
+          />
+          <Text style={styles.featuredMetaText}>CL-1 Auditorium</Text>
+        </View>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+        </View>
+        <Text style={styles.progressLabel}>214 / 300 registrations</Text>
+      </View>
+    </View>
+  );
+}
+
+function QuickActionButton({ item }: { item: QuickAction }) {
+  return (
+    <Pressable style={styles.quickAction}>
+      <View style={styles.quickActionIconWrap}>
+        <Ionicons name={item.icon} size={20} color={colors.primary} />
+      </View>
+      <Text style={styles.quickActionLabel}>{item.label}</Text>
+    </Pressable>
+  );
+}
+
+function RegistrationCard({ item }: { item: RegistrationItem }) {
+  const chipColor = registrationStatusColor(item.status);
+  return (
+    <View style={styles.registrationCard}>
+      <View style={styles.registrationAvatar}>
+        <Text style={styles.registrationAvatarText}>{initialsOf(item.studentName)}</Text>
+      </View>
+      <View style={styles.registrationInfo}>
+        <Text style={styles.registrationName}>{item.studentName}</Text>
+        <Text style={styles.registrationEvent}>{item.eventName}</Text>
+        <Text style={styles.registrationTime}>{item.time}</Text>
+      </View>
+      <View style={[styles.statusChip, { backgroundColor: `${chipColor}1F` }]}>
+        <Text style={[styles.statusChipText, { color: chipColor }]}>{item.status}</Text>
+      </View>
+    </View>
+  );
+}
+
+function UpcomingEventCard({ item }: { item: UpcomingEventItem }) {
+  const chipColor = eventStatusColor(item.status);
+  return (
+    <View style={styles.upcomingCard}>
+      <View style={styles.upcomingDateBlock}>
+        <Text style={styles.upcomingDateDay}>{item.date.split(' ')[0]}</Text>
+        <Text style={styles.upcomingDateMonth}>{item.date.split(' ')[1]}</Text>
+      </View>
+      <View style={styles.upcomingInfo}>
+        <Text style={styles.upcomingName}>{item.name}</Text>
+        <Text style={styles.upcomingMeta}>{item.time} · {item.venue}</Text>
+        <Text style={styles.upcomingSeats}>{item.seatsLeft} seats left</Text>
+      </View>
+      <View style={[styles.statusChip, { backgroundColor: `${chipColor}1F` }]}>
+        <Text style={[styles.statusChipText, { color: chipColor }]}>{item.status}</Text>
+      </View>
+    </View>
+  );
+}
+
+function AIInsightCard() {
+  return (
+    <View style={styles.aiCard}>
+      <View style={styles.aiIconWrap}>
+        <Ionicons name="sparkles-outline" size={20} color={colors.onSecondary} />
+      </View>
+      <Text style={styles.aiText}>
+        AI predicts a high turnout for your upcoming Hackathon based on current registration pace.
+      </Text>
+    </View>
+  );
+}
+
+export default function OrganizerDashboard() {
+  return (
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <WelcomeHeader />
+
         <View style={styles.statsGrid}>
-          {stats.map((stat, idx) => (
-            <View key={idx} style={[styles.statCard, shadows.level1]}>
-              <View style={[styles.statIconContainer, { backgroundColor: stat.color + '15' }]}>
-                <Icon name={stat.icon} size={16} color={stat.color} />
-              </View>
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
+          {stats.map((item) => (
+            <StatCard key={item.id} item={item} />
           ))}
         </View>
 
-        {/* Create Event Prompt Card */}
-        <View style={[styles.promptCard, shadows.level2]}>
-          <View style={styles.promptTextContainer}>
-            <Text style={styles.promptTitle}>Host your next masterpiece</Text>
-            <Text style={styles.promptSub}>Create details, set schedule, add tickets, and publish.</Text>
-          </View>
-          <TouchableOpacity style={styles.createButton} activeOpacity={0.9} onPress={handleCreateEvent}>
-            <Icon name="plus" size={18} color={colors.onPrimary} style={{ marginRight: 6 }} />
-            <Text style={styles.createButtonText}>Create Event</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.sectionTitle}>Featured Event</Text>
+        <FeaturedEventCard />
 
-        {/* Recent Events Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Active Events</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.eventsList}>
-          {recentEvents.map((evt, idx) => (
-            <View key={idx} style={[styles.eventRow, shadows.level1]}>
-              <Image source={{ uri: evt.image }} style={styles.eventImage} />
-              <View style={styles.eventInfo}>
-                <Text style={evt.status === 'Live' ? styles.eventRowTitleLive : styles.eventRowTitle} numberOfLines={1}>
-                  {evt.title}
-                </Text>
-                <Text style={styles.eventRowSub}>
-                  {evt.date} • {evt.tickets} tickets
-                </Text>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: colors.primaryFixed }]}>
-                <Text style={styles.statusText}>{evt.status}</Text>
-              </View>
-            </View>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsGrid}>
+          {quickActions.map((item) => (
+            <QuickActionButton key={item.id} item={item} />
           ))}
         </View>
+
+        <Text style={styles.sectionTitle}>Recent Registrations</Text>
+        {recentRegistrations.map((item) => (
+          <RegistrationCard key={item.id} item={item} />
+        ))}
+
+        <Text style={styles.sectionTitle}>Upcoming Events</Text>
+        {upcomingEvents.map((item) => (
+          <UpcomingEventCard key={item.id} item={item} />
+        ))}
+
+        <Text style={styles.sectionTitle}>AI Insight</Text>
+        <AIInsightCard />
       </ScrollView>
-    </SafeAreaView>
+
+      <Pressable style={styles.fab}>
+        <Ionicons name="add" size={26} color={colors.onPrimary} />
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.slate[100],
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    ...typography.headlineMd,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primaryContainer,
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: 100,
   },
-  welcomeSection: {
+
+  // Header
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.lg,
   },
-  welcomeTitle: {
-    ...typography.headlineLg,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  avatarCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: colors.onPrimary,
+    fontFamily: typography.headlineMd.fontFamily,
+    fontWeight: typography.labelMd.fontWeight,
+    fontSize: 16,
+  },
+  greetingText: {
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
+    color: colors.onSurfaceVariant,
+  },
+  nameText: {
+    fontFamily: typography.headlineMd.fontFamily,
+    fontSize: typography.headlineMd.fontSize,
+    fontWeight: typography.headlineMd.fontWeight,
     color: colors.onSurface,
   },
-  welcomeSub: {
-    ...typography.bodyMd,
-    color: colors.onSurfaceVariant,
-    marginTop: 2,
+  notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  notificationDot: {
+    position: 'absolute',
+    top: 10,
+    right: 11,
+    width: 8,
+    height: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.error,
+  },
+
+  // Section title
+  sectionTitle: {
+    fontFamily: typography.headlineMd.fontFamily,
+    fontSize: typography.headlineMd.fontSize,
+    fontWeight: typography.headlineMd.fontWeight,
+    color: colors.onSurface,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+
+  // Stats grid
   statsGrid: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   statCard: {
-    flex: 1,
+    width: '48%',
     backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: colors.slate[200],
     borderRadius: radius.card,
     padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.level2,
   },
-  statIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    justifyContent: 'center',
+  statIconChip: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   statValue: {
-    ...typography.headlineMd,
-    fontWeight: '700',
+    fontFamily: typography.headlineLgMobile.fontFamily,
+    fontSize: typography.headlineLgMobile.fontSize,
+    fontWeight: typography.headlineLgMobile.fontWeight,
     color: colors.onSurface,
   },
   statLabel: {
-    ...typography.labelSm,
-    fontSize: 9,
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
     color: colors.onSurfaceVariant,
     marginTop: 2,
   },
-  promptCard: {
+
+  // Featured event
+  featuredCard: {
     backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: colors.slate[200],
     borderRadius: radius.card,
-    padding: spacing.lg,
+    overflow: 'hidden',
+    ...shadows.level2,
+  },
+  featuredBanner: {
+    height: 120,
+    backgroundColor: colors.primary,
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    justifyContent: 'center',
   },
-  promptTextContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  promptTitle: {
-    ...typography.headlineMd,
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.onSurface,
-  },
-  promptSub: {
-    ...typography.bodyMd,
-    fontSize: 13,
-    color: colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryContainer,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.button,
-  },
-  createButtonText: {
-    ...typography.bodyMd,
-    color: colors.onPrimary,
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.headlineMd,
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.onSurface,
-  },
-  seeAllText: {
-    ...typography.bodyMd,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  eventsList: {
-    gap: spacing.sm,
-  },
-  eventRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderWidth: 1,
-    borderColor: colors.slate[200],
-    borderRadius: radius.md,
-    padding: spacing.sm,
-  },
-  eventImage: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.sm,
-  },
-  eventInfo: {
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  eventRowTitle: {
-    ...typography.bodyMd,
-    fontWeight: '600',
-    color: colors.onSurface,
-  },
-  eventRowTitleLive: {
-    ...typography.bodyMd,
-    fontWeight: '700',
-    color: colors.primary, // visually highlight live event
-  },
-  eventRowSub: {
-    ...typography.labelSm,
-    fontSize: 11,
-    color: colors.onSurfaceVariant,
-    marginTop: 2,
-  },
-  statusBadge: {
+  featuredBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    backgroundColor: colors.onPrimary,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.chip,
   },
-  statusText: {
-    ...typography.labelSm,
-    fontSize: 9,
+  featuredBadgeText: {
+    fontFamily: typography.labelSm.fontFamily,
+    fontSize: typography.labelSm.fontSize,
+    fontWeight: typography.labelSm.fontWeight,
+    color: colors.primary,
+  },
+  featuredBody: {
+    padding: spacing.md,
+  },
+  featuredTitle: {
+    fontFamily: typography.headlineMd.fontFamily,
+    fontSize: typography.headlineMd.fontSize,
+    fontWeight: typography.headlineMd.fontWeight,
+    color: colors.onSurface,
+    marginBottom: spacing.xs,
+  },
+  featuredMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  featuredMetaText: {
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
+    color: colors.onSurfaceVariant,
+    marginLeft: 4,
+  },
+  featuredMetaIconSpacer: {
+    marginLeft: spacing.sm,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerHigh,
+    overflow: 'hidden',
+    marginBottom: spacing.xs,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: radius.full,
+  },
+  progressLabel: {
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
+    color: colors.onSurfaceVariant,
+  },
+
+  // Quick actions
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  quickAction: {
+    width: '31%',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+    ...shadows.level1,
+  },
+  quickActionIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.surfaceContainerLow,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  quickActionLabel: {
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
+    color: colors.onSurface,
+    textAlign: 'center',
+  },
+
+  // Registration cards
+  registrationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    ...shadows.level1,
+  },
+  registrationAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  registrationAvatarText: {
+    color: colors.onSecondary,
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
+    fontWeight: typography.labelMd.fontWeight,
+  },
+  registrationInfo: {
+    flex: 1,
+  },
+  registrationName: {
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
     fontWeight: '600',
-    color: colors.onPrimaryFixedVariant,
+    color: colors.onSurface,
+  },
+  registrationEvent: {
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
+    color: colors.onSurfaceVariant,
+  },
+  registrationTime: {
+    fontFamily: typography.labelSm.fontFamily,
+    fontSize: typography.labelSm.fontSize,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+
+  // Upcoming events
+  upcomingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceContainerLowest,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    ...shadows.level1,
+  },
+  upcomingDateBlock: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceContainerHigh,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  upcomingDateDay: {
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  upcomingDateMonth: {
+    fontFamily: typography.labelSm.fontFamily,
+    fontSize: 10,
+    color: colors.onSurfaceVariant,
+  },
+  upcomingInfo: {
+    flex: 1,
+  },
+  upcomingName: {
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
+    fontWeight: '600',
+    color: colors.onSurface,
+  },
+  upcomingMeta: {
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
+    color: colors.onSurfaceVariant,
+  },
+  upcomingSeats: {
+    fontFamily: typography.labelSm.fontFamily,
+    fontSize: typography.labelSm.fontSize,
+    color: colors.onSurfaceVariant,
+    marginTop: 2,
+  },
+
+  // Status chip (shared by registrations + upcoming events)
+  statusChip: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.chip,
+  },
+  statusChipText: {
+    fontFamily: typography.labelSm.fontFamily,
+    fontSize: typography.labelSm.fontSize,
+    fontWeight: typography.labelSm.fontWeight,
+  },
+
+  // AI insight
+  aiCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.secondaryContainer,
+    borderRadius: radius.card,
+    padding: spacing.md,
+    ...shadows.level1,
+  },
+  aiIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.full,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  aiText: {
+    flex: 1,
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
+    color: colors.onSecondaryContainer,
+  },
+
+  // FAB
+  fab: {
+    position: 'absolute',
+    bottom: spacing.lg,
+    right: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.interactive,
   },
 });
