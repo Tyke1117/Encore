@@ -52,7 +52,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
     setIsLoading(true);
     try {
       await signup(email, password, fullName, mobileNumber);
-      navigation?.navigate('EmailVerification');
+      navigation?.navigate('OTPVerification', { contact: mobileNumber });
     } catch (error) {
       console.error(error);
     } finally {
@@ -237,20 +237,29 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
             </View>
 
             {/* Terms and Conditions */}
-            <Pressable 
-              style={styles.checkboxRow}
-              onPress={() => setAgreeTerms(!agreeTerms)}
-              disabled={isLoading}
-            >
-              <MaterialCommunityIcons 
-                name={agreeTerms ? "checkbox-marked" : "checkbox-blank-outline"} 
-                size={22} 
-                color={agreeTerms ? colors.primary : colors.outline} 
-              />
+            <View style={styles.checkboxRow}>
+              <TouchableOpacity 
+                onPress={() => setAgreeTerms(!agreeTerms)}
+                disabled={isLoading}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons 
+                  name={agreeTerms ? "checkbox-marked" : "checkbox-blank-outline"} 
+                  size={22} 
+                  color={agreeTerms ? colors.primary : colors.outline} 
+                />
+              </TouchableOpacity>
               <Text style={styles.checkboxText}>
-                I agree to the <Text style={styles.linkText}>Terms & Conditions</Text> and <Text style={styles.linkText}>Privacy Policy</Text>
+                I agree to the{' '}
+                <Text style={styles.linkText} onPress={() => navigation?.navigate('Terms')}>
+                  Terms & Conditions
+                </Text>{' '}
+                and{' '}
+                <Text style={styles.linkText} onPress={() => navigation?.navigate('PrivacyPolicy')}>
+                  Privacy Policy
+                </Text>
               </Text>
-            </Pressable>
+            </View>
 
             {/* Submit Button */}
             <TouchableOpacity 
