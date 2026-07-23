@@ -8,10 +8,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
@@ -43,7 +43,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setIsLoading(true);
     try {
       await login(email, password);
-      navigation?.navigate('OrganizerDashboard');
+     navigation?.navigate('OrganizerTabs', { screen: 'OrganizerDashboard' });
     } catch (error) {
       console.error(error);
     } finally {
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md,
-    ...shadows.sm,
+    ...shadows.level1,
   },
   welcomeTitle: {
     fontFamily: typography.headlineLgMobile.fontFamily,
@@ -333,17 +333,17 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.level2,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   primaryButtonText: {
-    fontFamily: typography.labelLgMobile ? typography.labelLgMobile.fontFamily : typography.labelMd.fontFamily,
+    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
     fontWeight: '600',
     color: colors.onPrimary,
@@ -376,10 +376,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     height: 56,
     gap: spacing.sm,
-    ...shadows.sm,
+    ...shadows.level1,
   },
   socialButtonText: {
     fontFamily: typography.labelMd.fontFamily,

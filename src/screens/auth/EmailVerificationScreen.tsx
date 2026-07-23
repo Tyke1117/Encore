@@ -7,9 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.sm,
+    ...shadows.level1,
   },
   messageContainer: {
     paddingHorizontal: spacing.md,
@@ -191,11 +191,11 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.level2,
   },
   primaryButtonText: {
     fontFamily: typography.labelMd.fontFamily,
@@ -207,11 +207,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.sm,
+    ...shadows.level1,
   },
   secondaryButtonText: {
     fontFamily: typography.labelMd.fontFamily,

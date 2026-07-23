@@ -47,6 +47,10 @@ interface QuickAction {
   icon: IoniconName;
 }
 
+interface OrganizerDashboardProps {
+  navigation: any;
+}
+
 const stats: StatCardData[] = [
   { id: '1', label: 'Total Events', value: '18', icon: 'calendar-outline', tint: colors.primary },
   { id: '2', label: 'Active Events', value: '5', icon: 'flash-outline', tint: colors.tertiary },
@@ -161,9 +165,9 @@ function FeaturedEventCard() {
   );
 }
 
-function QuickActionButton({ item }: { item: QuickAction }) {
+function QuickActionButton({ item, onPress }: { item: QuickAction; onPress: () => void }) {
   return (
-    <Pressable style={styles.quickAction}>
+    <Pressable style={styles.quickAction} onPress={onPress}>
       <View style={styles.quickActionIconWrap}>
         <Ionicons name={item.icon} size={20} color={colors.primary} />
       </View>
@@ -191,10 +195,10 @@ function RegistrationCard({ item }: { item: RegistrationItem }) {
   );
 }
 
-function UpcomingEventCard({ item }: { item: UpcomingEventItem }) {
+function UpcomingEventCard({ item, onPress }: { item: UpcomingEventItem; onPress: () => void }) {
   const chipColor = eventStatusColor(item.status);
   return (
-    <View style={styles.upcomingCard}>
+    <Pressable style={styles.upcomingCard} onPress={onPress}>
       <View style={styles.upcomingDateBlock}>
         <Text style={styles.upcomingDateDay}>{item.date.split(' ')[0]}</Text>
         <Text style={styles.upcomingDateMonth}>{item.date.split(' ')[1]}</Text>
@@ -207,7 +211,7 @@ function UpcomingEventCard({ item }: { item: UpcomingEventItem }) {
       <View style={[styles.statusChip, { backgroundColor: `${chipColor}1F` }]}>
         <Text style={[styles.statusChipText, { color: chipColor }]}>{item.status}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -224,7 +228,17 @@ function AIInsightCard() {
   );
 }
 
-export default function OrganizerDashboard() {
+export default function OrganizerDashboard({ navigation }: OrganizerDashboardProps) {
+  const handleQuickAction = (id: QuickAction['id']) => {
+    if (id === '1') {
+      navigation.navigate('CreateEventDetails');
+    } else if (id === '3') {
+      navigation.navigate('Volunteers');
+    }
+    // Other quick actions (Manage Events, Analytics, Certificates, Announcements)
+    // are not wired yet — no matching screens exist this week.
+  };
+
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -245,7 +259,11 @@ export default function OrganizerDashboard() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActionsGrid}>
           {quickActions.map((item) => (
-            <QuickActionButton key={item.id} item={item} />
+            <QuickActionButton
+              key={item.id}
+              item={item}
+              onPress={() => handleQuickAction(item.id)}
+            />
           ))}
         </View>
 
@@ -256,14 +274,21 @@ export default function OrganizerDashboard() {
 
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
         {upcomingEvents.map((item) => (
-          <UpcomingEventCard key={item.id} item={item} />
+          <UpcomingEventCard
+            key={item.id}
+            item={item}
+            onPress={() => navigation.navigate('EditEventScreen', { event: item })}
+          />
         ))}
 
         <Text style={styles.sectionTitle}>AI Insight</Text>
         <AIInsightCard />
       </ScrollView>
 
-      <Pressable style={styles.fab}>
+      <Pressable
+        style={styles.fab}
+        onPress={() => navigation.navigate('CreateEventDetails')}
+      >
         <Ionicons name="add" size={26} color={colors.onPrimary} />
       </Pressable>
     </View>
@@ -278,10 +303,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: 140,
   },
 
-  // Header
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,7 +360,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error,
   },
 
-  // Section title
   sectionTitle: {
     fontFamily: typography.headlineMd.fontFamily,
     fontSize: typography.headlineMd.fontSize,
@@ -346,7 +369,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  // Stats grid
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -381,7 +403,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Featured event
   featuredCard: {
     backgroundColor: colors.surfaceContainerLowest,
     borderRadius: radius.card,
@@ -451,7 +472,6 @@ const styles = StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
 
-  // Quick actions
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -482,7 +502,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Registration cards
   registrationCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -528,7 +547,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Upcoming events
   upcomingCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -579,7 +597,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Status chip (shared by registrations + upcoming events)
   statusChip: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
@@ -591,7 +608,6 @@ const styles = StyleSheet.create({
     fontWeight: typography.labelSm.fontWeight,
   },
 
-  // AI insight
   aiCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -616,7 +632,6 @@ const styles = StyleSheet.create({
     color: colors.onSecondaryContainer,
   },
 
-  // FAB
   fab: {
     position: 'absolute',
     bottom: spacing.lg,
@@ -629,4 +644,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...shadows.interactive,
   },
-
+});

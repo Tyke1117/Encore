@@ -8,10 +8,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
@@ -375,12 +375,12 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: spacing.sm,
-    ...shadows.md,
+    ...shadows.level2,
   },
   buttonDisabled: {
     opacity: 0.5,

@@ -8,9 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  SafeAreaView,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
@@ -35,7 +35,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ naviga
   // Strength parameters
   const [strengthLevel, setStrengthLevel] = useState<'none' | 'weak' | 'medium' | 'strong'>('none');
   const [strengthText, setStrengthText] = useState('');
-  const [strengthColor, setStrengthColor] = useState(colors.outline);
+  const [strengthColor, setStrengthColor] = useState<string>(colors.outline);
 
   // Focus states
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#2E7D32',
-    marginBottom: spacing.xxs,
+    marginBottom: spacing.sm,
   },
   successDescription: {
     fontFamily: typography.bodyMd.fontFamily,
@@ -349,17 +349,17 @@ const styles = StyleSheet.create({
     height: 4,
     width: '100%',
     backgroundColor: colors.surfaceVariant,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     overflow: 'hidden',
   },
   strengthBarActive: {
     height: '100%',
-    borderRadius: radius.round,
+    borderRadius: radius.full,
   },
   strengthLabelText: {
     fontFamily: typography.labelSm.fontFamily,
     fontSize: 12,
-    marginTop: spacing.xxs,
+    marginTop: spacing.sm,
     fontWeight: '500',
   },
   errorLabelText: {
@@ -371,12 +371,12 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: spacing.md,
-    ...shadows.md,
+    ...shadows.level2,
   },
   buttonDisabled: {
     opacity: 0.5,

@@ -6,11 +6,11 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   Switch,
   ImageBackground,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/fonts';
@@ -50,7 +50,7 @@ export default function CreateEventTickets({ route, navigation }: CreateEventTic
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Control Bar */}
         <View style={styles.topControlRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('OrganizerDashboard')}>
+         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('OrganizerTabs', { screen: 'OrganizerDashboard' })}>
             <Icon name="x" size={22} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
@@ -158,7 +158,7 @@ export default function CreateEventTickets({ route, navigation }: CreateEventTic
         {/* Enable Waitlist card */}
         <View style={[styles.waitlistCard, shadows.level1]}>
           <View style={styles.waitlistIconCircle}>
-            <Icon name="hourglass" size={18} color={colors.secondary} />
+            <Icon name="clock" size={18} color={colors.secondary} />
           </View>
           <View style={{ flex: 1, paddingRight: spacing.sm }}>
             <Text style={styles.waitlistTitle}>Enable Waitlist</Text>
