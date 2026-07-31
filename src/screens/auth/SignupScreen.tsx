@@ -13,6 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -94,7 +95,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name="account-outline" 
                   size={20} 
-                  color={isNameFocused ? colors.primary : colors.outline} 
+                  color={isNameFocused ? colors.secondary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -119,7 +120,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name="email-outline" 
                   size={20} 
-                  color={isEmailFocused ? colors.primary : colors.outline} 
+                  color={isEmailFocused ? colors.secondary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -145,7 +146,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name="phone-outline" 
                   size={20} 
-                  color={isMobileFocused ? colors.primary : colors.outline} 
+                  color={isMobileFocused ? colors.secondary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -169,7 +170,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name="lock-outline" 
                   size={20} 
-                  color={isPasswordFocused ? colors.primary : colors.outline} 
+                  color={isPasswordFocused ? colors.secondary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -206,7 +207,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name="lock-check-outline" 
                   size={20} 
-                  color={isConfirmPasswordFocused ? colors.primary : colors.outline} 
+                  color={isConfirmPasswordFocused ? colors.secondary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -246,7 +247,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name={agreeTerms ? "checkbox-marked" : "checkbox-blank-outline"} 
                   size={22} 
-                  color={agreeTerms ? colors.primary : colors.outline} 
+                  color={agreeTerms ? colors.secondary : colors.outline} 
                 />
               </TouchableOpacity>
               <Text style={styles.checkboxText}>
@@ -263,10 +264,10 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
 
             {/* Submit Button */}
             <TouchableOpacity 
-              style={[styles.primaryButton, (!agreeTerms || isLoading) && styles.buttonDisabled]} 
               onPress={handleSignup}
               disabled={isLoading || !agreeTerms}
               activeOpacity={0.8}
+              style={[styles.primaryButton, { backgroundColor: colors.secondary }, (!agreeTerms || isLoading) && styles.buttonDisabled]}
             >
               <Text style={styles.primaryButtonText}>Create Account</Text>
             </TouchableOpacity>
@@ -314,16 +315,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   welcomeTitle: {
-    fontFamily: typography.headlineLgMobile.fontFamily,
-    fontSize: typography.headlineLgMobile.fontSize,
-    fontWeight: typography.headlineLgMobile.fontWeight,
+    ...typography.headlineLgMobile,
     color: colors.onBackground,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
-    color: colors.secondary,
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
   },
   formContainer: {
     width: '100%',
@@ -332,9 +331,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   inputLabel: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: typography.labelMd.fontSize,
+    ...typography.labelMd,
     color: colors.onBackground,
+    fontWeight: '600',
     marginBottom: spacing.xs,
     marginLeft: spacing.xs,
   },
@@ -344,13 +343,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.lg,
+    borderRadius: radius.input,
     paddingHorizontal: spacing.md,
     height: 56,
   },
   inputFocused: {
-    borderColor: colors.primary,
-    borderWidth: 2,
+    borderColor: colors.secondary,
+    borderWidth: 1.5,
   },
   inputIcon: {
     marginRight: spacing.sm,
@@ -358,8 +357,7 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     color: colors.onBackground,
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
+    ...typography.bodyMd,
     height: '100%',
   },
   iconButton: {
@@ -372,32 +370,30 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   checkboxText: {
-    fontFamily: typography.bodyMd.fontFamily,
+    ...typography.bodyMd,
     fontSize: 13,
-    color: colors.secondary,
+    color: colors.onSurfaceVariant,
     marginLeft: spacing.xs,
     lineHeight: 18,
   },
   linkText: {
-    color: colors.primary,
+    color: colors.secondary,
     fontWeight: '600',
   },
   primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.button,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: spacing.sm,
-    ...shadows.md,
+    width: '100%',
+    ...shadows.level2,
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   primaryButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.onPrimary,
   },
   footer: {
@@ -408,16 +404,15 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   footerText: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 14,
-    color: colors.secondary,
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
   },
   footerLink: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: 14,
+    ...typography.labelMd,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.secondary,
   },
 });
 
 export default SignupScreen;
+

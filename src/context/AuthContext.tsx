@@ -12,11 +12,12 @@ export interface UserProfile {
 export interface AuthContextType {
   currentUser: UserProfile | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  signup: (email: string, password: string, fullName: string, mobileNumber: string) => Promise<any>;
+  login: (email: string, password: string, role?: string) => Promise<any>;
+  signup: (email: string, password: string, fullName: string, mobileNumber: string, role?: string) => Promise<any>;
   logout: () => Promise<any>;
   resetPassword: (email: string) => Promise<any>;
   sendVerification: () => Promise<any>;
+  setRole: (role: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,16 +38,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, role = 'attendee') => {
     setLoading(true);
     try {
       const res = await authService.login(email, password);
       if (res.success) {
         setCurrentUser({
           uid: 'mock_uid_123',
-          name: 'Attendee User',
+          name: role === 'organizer' ? 'User' : 'User (Attendee)',
           email: email,
-          role: 'user',
+          role: role,
         });
       }
       return res;
@@ -55,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (email: string, password: string, fullName: string, mobileNumber: string) => {
+  const signup = async (email: string, password: string, fullName: string, mobileNumber: string, role = 'attendee') => {
     setLoading(true);
     try {
       const res = await authService.signup(email, password, fullName, mobileNumber);
@@ -65,7 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           name: fullName,
           email: email,
           mobileNumber: mobileNumber,
-          role: 'user',
+          role: role,
         });
       }
       return res;
@@ -95,6 +96,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return authService.sendVerification();
   };
 
+  const setRole = (role: string) => {
+    if (currentUser) {
+      setCurrentUser({
+        ...currentUser,
+        role: role,
+        name: role === 'organizer' ? 'User' : 'User (Attendee)',
+      });
+    }
+  };
+
   const value: AuthContextType = {
     currentUser,
     loading,
@@ -103,6 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     resetPassword,
     sendVerification,
+    setRole,
   };
 
   return (

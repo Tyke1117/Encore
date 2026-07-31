@@ -9,7 +9,8 @@ import {
   StatusBar,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
+import { ColorsType } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
@@ -20,9 +21,12 @@ interface TermsScreenProps {
 }
 
 export const TermsScreen: React.FC<TermsScreenProps> = ({ navigation }) => {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <SafeAreaView style={[styles.safeContainer, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       {/* Header */}
       <View style={styles.headerContainer}>
@@ -86,9 +90,9 @@ export const TermsScreen: React.FC<TermsScreenProps> = ({ navigation }) => {
       {/* Footer Button */}
       <View style={styles.footerContainer}>
         <TouchableOpacity 
-          style={styles.primaryButton}
           onPress={() => navigation?.goBack()}
           activeOpacity={0.8}
+          style={[styles.primaryButton, { backgroundColor: colors.secondary }]}
         >
           <Text style={styles.primaryButtonText}>I Understand</Text>
         </TouchableOpacity>
@@ -97,10 +101,9 @@ export const TermsScreen: React.FC<TermsScreenProps> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ColorsType) => StyleSheet.create({
   safeContainer: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -119,9 +122,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontFamily: typography.headlineMd.fontFamily,
-    fontSize: 18,
-    fontWeight: '600',
+    ...typography.headlineMd,
+    fontWeight: '700',
     color: colors.onBackground,
   },
   spacer: {
@@ -132,29 +134,26 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   lastUpdated: {
-    fontFamily: typography.labelSm.fontFamily,
-    fontSize: 12,
-    color: colors.outline,
+    ...typography.labelSm,
+    color: colors.onSurfaceVariant,
     marginBottom: spacing.md,
   },
   introduction: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 14,
+    ...typography.bodyMd,
     color: colors.onSurfaceVariant,
     lineHeight: 22,
     marginBottom: spacing.lg,
   },
   sectionTitle: {
-    fontFamily: typography.headlineMd.fontFamily,
+    ...typography.headlineMd,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: colors.onBackground,
     marginTop: spacing.lg,
     marginBottom: spacing.xs,
   },
   sectionBody: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 14,
+    ...typography.bodyMd,
     color: colors.onSurfaceVariant,
     lineHeight: 22,
     marginBottom: spacing.sm,
@@ -166,18 +165,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.button,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    width: '100%',
+    ...shadows.level2,
   },
   primaryButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.onPrimary,
+    fontWeight: '700',
+    color: '#ffffff',
   },
 });
 

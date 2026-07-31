@@ -11,6 +11,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -82,9 +83,14 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
 
           {/* Illustration Container */}
           <View style={styles.illustrationWrapper}>
-            <View style={styles.illustrationBg}>
-              <MaterialCommunityIcons name="email-check-outline" size={64} color={colors.primary} />
-            </View>
+            <LinearGradient
+              colors={[colors.secondaryContainer, colors.tertiaryContainer]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.illustrationBg}
+            >
+              <MaterialCommunityIcons name="email-check-outline" size={64} color={colors.secondary} />
+            </LinearGradient>
           </View>
 
           {/* Informational Message */}
@@ -99,9 +105,9 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
           <View style={styles.actionContainer}>
             {/* Continue Button */}
             <TouchableOpacity 
-              style={styles.primaryButton} 
               onPress={handleContinue}
               activeOpacity={0.8}
+              style={[styles.primaryButton, { backgroundColor: colors.secondary }]}
             >
               <Text style={styles.primaryButtonText}>Continue</Text>
             </TouchableOpacity>
@@ -150,16 +156,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   welcomeTitle: {
-    fontFamily: typography.headlineLgMobile.fontFamily,
-    fontSize: typography.headlineLgMobile.fontSize,
-    fontWeight: typography.headlineLgMobile.fontWeight,
+    ...typography.headlineLgMobile,
     color: colors.onBackground,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
-    color: colors.secondary,
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
   },
   illustrationWrapper: {
     alignItems: 'center',
@@ -169,18 +173,16 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.sm,
+    ...shadows.level2,
   },
   messageContainer: {
     paddingHorizontal: spacing.md,
     marginBottom: spacing.xxl,
   },
   messageBody: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 14,
+    ...typography.bodyMd,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
@@ -190,34 +192,33 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.round,
+    borderRadius: radius.button,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    width: '100%',
+    ...shadows.level2,
   },
   primaryButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.onPrimary,
   },
   secondaryButton: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.round,
+    borderRadius: radius.button,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.sm,
+    ...shadows.level1,
   },
   secondaryButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
+    ...typography.labelMd,
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
+    color: colors.secondary,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -225,3 +226,4 @@ const styles = StyleSheet.create({
 });
 
 export default EmailVerificationScreen;
+
