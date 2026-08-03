@@ -15,7 +15,7 @@ import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
-import { useAuth } from '../../context/AuthContext';
+
 
 interface SettingsRowProps {
   icon: React.ComponentProps<typeof Ionicons>['name'];
@@ -78,7 +78,7 @@ export default function SettingsScreen({ navigation }: { navigation: any }) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await logout();
+              navigation.replace('Login');
             } catch (e) {
               console.error(e);
             }

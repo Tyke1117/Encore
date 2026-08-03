@@ -13,12 +13,13 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext';
+
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
+import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
 
 interface ResetPasswordScreenProps {
   navigation: any;

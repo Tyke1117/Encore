@@ -12,19 +12,19 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext';
+
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
-
+import { getAuth, sendEmailVerification } from '@react-native-firebase/auth';
 interface EmailVerificationScreenProps {
   navigation: any;
 }
 
 export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ navigation }) => {
-  const { sendVerification } = useAuth();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimeLeft, setResendTimeLeft] = useState(0);
 
@@ -32,9 +32,12 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
     if (resendTimeLeft > 0) return;
     setIsLoading(true);
     try {
-      await sendVerification();
+      const currentUser = getAuth().currentUser;
+      if (!currentUser) {
+        throw new Error('No signed-in user found.');
+      }
+      await sendEmailVerification(currentUser);
       setResendTimeLeft(60);
-      // Start cooldown timer
       const interval = setInterval(() => {
         setResendTimeLeft((prev) => {
           if (prev <= 1) {

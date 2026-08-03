@@ -10,10 +10,11 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  Alert
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext';
+import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
@@ -25,7 +26,6 @@ interface ForgotPasswordScreenProps {
 }
 
 export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }) => {
-  const { resetPassword } = useAuth();
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -33,13 +33,21 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
   const [isEmailFocused, setIsEmailFocused] = useState(false);
 
   const handleReset = async () => {
-    if (!email.trim()) return;
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
     setIsLoading(true);
     try {
-      await resetPassword(email);
+      await sendPasswordResetEmail(getAuth(), trimmedEmail);
       setIsSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      if (error?.code === 'auth/user-not-found') {
+        Alert.alert('No Account', 'No account found with this email.');
+      } else if (error?.code === 'auth/invalid-email') {
+        Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      } else {
+        Alert.alert('Something Went Wrong', 'Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +132,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
 
             {/* Send Link Button */}
             <TouchableOpacity 
-              onPress={isSuccess ? () => navigation?.navigate('ResetPassword') : handleReset}
+              onPress={isSuccess ? () => navigation?.navigate('Login') : handleReset}
               disabled={isLoading || (!email.trim() && !isSuccess)}
               activeOpacity={0.8}
               style={[
@@ -134,7 +142,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
               ]}
             >
               <Text style={styles.primaryButtonText}>
-                {isSuccess ? 'Proceed to Update' : 'Send Reset Link'}
+                {isSuccess ? 'Back to Login' : 'Send Reset Link'}
               </Text>
             </TouchableOpacity>
           </View>

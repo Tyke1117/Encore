@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "583541227315",
+    "project_id": "encore-6a677",
+    "storage_bucket": "encore-6a677.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:583541227315:android:d846efc4fce5db532b0846",
+        "android_client_info": {
+          "package_name": "com.tyke.Encore"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "583541227315-fhqlt1quffprgu9m2ql5liq3rt107qna.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAW9FCsSAtIRjhDli75AVNY7OA3BvB9fRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "583541227315-fhqlt1quffprgu9m2ql5liq3rt107qna.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

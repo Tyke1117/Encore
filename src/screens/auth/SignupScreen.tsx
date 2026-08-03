@@ -11,22 +11,29 @@ import {
   SafeAreaView,
   StatusBar,
   Pressable,
+  Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext';
+
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from '@react-native-firebase/auth';
+
 
 interface SignupScreenProps {
   navigation: any;
 }
 
 export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
-  const { signup } = useAuth();
+  // const { signup } = useAuth();
 
   // Input states
   const [fullName, setFullName] = useState('');
@@ -48,19 +55,69 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isConfirmPasswordFocused, setIsConfirmPasswordFocused] = useState(false);
 
-  const handleSignup = async () => {
-    if (!email.trim() || !password || !fullName.trim() || !mobileNumber.trim() || !agreeTerms) return;
-    setIsLoading(true);
-    try {
-      await signup(email, password, fullName, mobileNumber);
-      navigation?.navigate('OTPVerification', { contact: mobileNumber });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+ 
+const handleSignup = async () => {
+  const userEmail = email.trim().toLowerCase();
 
+  if (!fullName.trim()) {
+    return Alert.alert("Error", "Enter your full name.");
+  }
+
+  if (!userEmail) {
+    return Alert.alert("Error", "Enter your email.");
+  }
+
+  if (!mobileNumber.trim()) {
+    return Alert.alert("Error", "Enter your mobile number.");
+  }
+
+  if (password.length < 6) {
+    return Alert.alert("Error", "Password must be at least 6 characters.");
+  }
+
+  if (password !== confirmPassword) {
+    return Alert.alert("Error", "Passwords do not match.");
+  }
+
+  if (!agreeTerms) {
+    return Alert.alert("Error", "Please accept Terms & Conditions.");
+  }
+
+  setIsLoading(true);
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      getAuth(),
+      userEmail,
+      password
+    );
+
+    await updateProfile(userCredential.user, {
+      displayName: fullName,
+    });
+
+    navigation.replace("AppDrawer");
+  } catch (error: any) {
+    switch (error.code) {
+      case "auth/email-already-in-use":
+        Alert.alert("Email Exists", "An account already exists.");
+        break;
+
+      case "auth/invalid-email":
+        Alert.alert("Invalid Email");
+        break;
+
+      case "auth/weak-password":
+        Alert.alert("Weak Password", "Password should be at least 6 characters.");
+        break;
+
+      default:
+        Alert.alert("Signup Failed", error.message);
+    }
+  } finally {
+    setIsLoading(false);
+  }
+  };
   return (
     <SafeAreaView style={styles.safeContainer}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />

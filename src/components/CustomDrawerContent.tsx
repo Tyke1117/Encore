@@ -16,10 +16,10 @@ import { useTheme } from '../context/ThemeContext';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
-import { useAuth } from '../context/AuthContext';
 
-export default function CustomDrawerContent(props: DrawerContentComponentProps) {
-  const { currentUser, logout, setRole } = useAuth();
+export default function CustomDrawerContent(props: DrawerContentComponentProps){
+  const { navigation } = props ;
+  // const { currentUser, logout, setRole } = useAuth();
   const { colors } = useTheme();
 
   const state = props.state;
@@ -34,15 +34,14 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
   const handleLogout = async () => {
     try {
-      await logout();
-      props.navigation.closeDrawer();
+      navigation.replace('Login')
     } catch (e) {
       console.error(e);
     }
   };
 
-  const name = currentUser?.name || 'User';
-  const email = currentUser?.email || 'user@encore.edu';
+  const name = 'User';
+  const email =  'user@encore.edu';
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -89,14 +88,14 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
           <View style={styles.roleSwitchTextWrap}>
             <Text style={[styles.roleLabel, { color: colors.onSurfaceVariant }]}>Active Workspace</Text>
             <Text style={[styles.roleValue, { color: colors.onSurface }]}>
-              {currentUser?.role === 'organizer' ? 'Organizer Mode' : 'Attendee Mode'}
+              {/* {currentUser?.role === 'organizer' ? 'Organizer Mode' : 'Attendee Mode'} */}
             </Text>
           </View>
           <TouchableOpacity 
             style={[styles.roleSwitchBtn, { backgroundColor: colors.secondaryContainer }]}
             onPress={() => {
-              const targetRole = currentUser?.role === 'organizer' ? 'attendee' : 'organizer';
-              setRole(targetRole);
+              // const targetRole = currentUser?.role === 'organizer' ? 'attendee' : 'organizer';
+              // setRole(targetRole);
               // Navigate Home to make sure the tab views refresh
               props.navigation.navigate('AppTabs', { screen: 'Home' });
             }}

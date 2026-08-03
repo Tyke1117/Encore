@@ -1,0 +1,2 @@
+export const GOOGLE_WEB_CLIENT_ID = "583541227315-fhqlt1quffprgu9m2ql5liq3rt107qna.apps.googleusercontent.com";
+export const iosUrlScheme = "com.googleusercontent.apps.583541227315-3p771r759svmuo51ef31dsllg60dve0k";

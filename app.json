@@ -7,7 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tyke.Encore",
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,13 +22,22 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.tyke.Encore"
+      "package": "com.tyke.Encore",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-status-bar"
+      "expo-status-bar",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.583541227315-3p771r759svmuo51ef31dsllg60dve0k"
+        }
+      ]
     ],
     "extra": {
       "eas": {

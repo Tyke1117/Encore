@@ -14,7 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
@@ -94,7 +94,7 @@ const eventsList: EventItem[] = [
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
-  const { currentUser } = useAuth();
+  // const { currentUser } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -161,7 +161,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Welcome Section */}
         <Text style={[styles.greetingText, { color: colors.onSurface }]}>
-          Hi, {currentUser?.name ? currentUser.name.split(' ')[0] : 'User'} 👋
+          {/* Hi, {currentUser?.name ? currentUser.name.split(' ')[0] : 'User'} 👋 */}
         </Text>
         <Text style={[styles.subtitleText, { color: colors.onSurfaceVariant }]}>
           Find awesome student summits, hackathons, and concerts.

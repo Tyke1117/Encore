@@ -6,7 +6,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Import Auth Screens
@@ -16,7 +16,7 @@ import { SignupScreen } from './src/screens/auth/SignupScreen';
 import { ForgotPasswordScreen } from './src/screens/auth/ForgotPasswordScreen';
 import { ResetPasswordScreen } from './src/screens/auth/ResetPasswordScreen';
 import { EmailVerificationScreen } from './src/screens/auth/EmailVerificationScreen';
-import { OTPVerificationScreen } from './src/screens/auth/OTPVerificationScreen';
+
 import { TermsScreen } from './src/screens/auth/TermsScreen';
 import { PrivacyPolicyScreen } from './src/screens/auth/PrivacyPolicyScreen';
 
@@ -39,15 +39,21 @@ const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 
+import { getAuth } from '@react-native-firebase/auth';
+
 function AppTabs() {
   const { colors } = useTheme();
-  const { currentUser } = useAuth();
+  const [isOrganizer, setIsOrganizer] = React.useState(false);
 
-  const isOrganizer = currentUser?.role === 'organizer';
+  React.useEffect(() => {
+    const user = getAuth().currentUser;
+    // if you store role as a custom claim or in Firestore, fetch it here instead
+    // for now, defaulting to false (attendee) until you wire up role storage
+    setIsOrganizer(false);
+  }, []);
 
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
+    <Tab.Navigator      screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
           if (route.name === 'Home') {
@@ -105,7 +111,7 @@ function AppDrawer() {
 
 export default function App() {
   return (
-    <AuthProvider>
+    
       <ThemeProvider>
         <NavigationContainer>
           <Stack.Navigator
@@ -124,7 +130,6 @@ export default function App() {
             <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
             <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
             <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
-            <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
             <Stack.Screen name="Terms" component={TermsScreen} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
 
@@ -139,7 +144,6 @@ export default function App() {
           </Stack.Navigator>
         </NavigationContainer>
       </ThemeProvider>
-    </AuthProvider>
+    
   );
 }
-    
