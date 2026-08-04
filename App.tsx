@@ -6,8 +6,8 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { AuthProvider } from './src/context/AuthContext';
 
 // Import Auth Screens
 import SplashScreen from './src/screens/auth/SplashScreen';
@@ -111,8 +111,8 @@ function AppDrawer() {
 
 export default function App() {
   return (
-    
-      <ThemeProvider>
+    <ThemeProvider>
+      <AuthProvider>
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName="Splash"
@@ -121,7 +121,9 @@ export default function App() {
               animation: 'slide_from_right',
             }}
           >
-            {/* Splash Intro */}
+            {/* Splash Intro — now also checks Firebase's restored
+                session and routes straight to AppDrawer if the user
+                is already logged in, instead of always going to Login. */}
             <Stack.Screen name="Splash" component={SplashScreen} />
 
             {/* Auth Screens */}
@@ -143,7 +145,7 @@ export default function App() {
             <Stack.Screen name="EventPublished" component={EventPublished} />
           </Stack.Navigator>
         </NavigationContainer>
-      </ThemeProvider>
-    
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
