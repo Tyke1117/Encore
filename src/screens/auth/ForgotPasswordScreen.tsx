@@ -9,10 +9,12 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
@@ -24,7 +26,6 @@ interface ForgotPasswordScreenProps {
 }
 
 export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }) => {
-  const { resetPassword } = useAuth();
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -32,13 +33,21 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
   const [isEmailFocused, setIsEmailFocused] = useState(false);
 
   const handleReset = async () => {
-    if (!email.trim()) return;
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
     setIsLoading(true);
     try {
-      await resetPassword(email);
+      await sendPasswordResetEmail(getAuth(), trimmedEmail);
       setIsSuccess(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      if (error?.code === 'auth/user-not-found') {
+        Alert.alert('No Account', 'No account found with this email.');
+      } else if (error?.code === 'auth/invalid-email') {
+        Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      } else {
+        Alert.alert('Something Went Wrong', 'Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,9 +80,14 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
 
           {/* Illustration Container */}
           <View style={styles.illustrationWrapper}>
-            <View style={styles.illustrationBg}>
-              <MaterialCommunityIcons name="shield-key-outline" size={64} color={colors.primary} />
-            </View>
+            <LinearGradient
+              colors={[colors.secondaryContainer, colors.tertiaryContainer]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.illustrationBg}
+            >
+              <MaterialCommunityIcons name="shield-key-outline" size={64} color={colors.secondary} />
+            </LinearGradient>
           </View>
 
           {/* Form / Content */}
@@ -97,7 +111,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
                 <MaterialCommunityIcons 
                   name="email-outline" 
                   size={20} 
-                  color={isEmailFocused ? colors.primary : colors.outline} 
+                  color={isEmailFocused ? colors.secondary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -118,17 +132,17 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
 
             {/* Send Link Button */}
             <TouchableOpacity 
-              style={[
-                styles.primaryButton, 
-                (isLoading || !email.trim()) && styles.buttonDisabled,
-                isSuccess && styles.buttonSuccess
-              ]} 
-              onPress={isSuccess ? () => navigation?.navigate('ResetPassword') : handleReset}
+              onPress={isSuccess ? () => navigation?.navigate('Login') : handleReset}
               disabled={isLoading || (!email.trim() && !isSuccess)}
               activeOpacity={0.8}
+              style={[
+                styles.primaryButton,
+                { backgroundColor: isSuccess ? '#2E7D32' : colors.secondary },
+                (isLoading || (!email.trim() && !isSuccess)) && styles.buttonDisabled
+              ]}
             >
               <Text style={styles.primaryButtonText}>
-                {isSuccess ? 'Proceed to Update' : 'Send Reset Link'}
+                {isSuccess ? 'Back to Login' : 'Send Reset Link'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -139,7 +153,7 @@ export const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navi
             onPress={() => navigation?.navigate('Login')}
             disabled={isLoading}
           >
-            <MaterialCommunityIcons name="keyboard-backspace" size={20} color={colors.primary} />
+            <MaterialCommunityIcons name="keyboard-backspace" size={20} color={colors.secondary} />
             <Text style={styles.footerLinkText}>Back to Login</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -174,16 +188,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   welcomeTitle: {
-    fontFamily: typography.headlineLgMobile.fontFamily,
-    fontSize: typography.headlineLgMobile.fontSize,
-    fontWeight: typography.headlineLgMobile.fontWeight,
+    ...typography.headlineLgMobile,
     color: colors.onBackground,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
-    color: colors.secondary,
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
   },
   illustrationWrapper: {
     alignItems: 'center',
@@ -193,9 +205,9 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
+    ...shadows.level2,
     ...shadows.level1,
   },
   formContainer: {
@@ -206,7 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#E8F5E9',
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: '#2E7D32',
@@ -216,25 +228,26 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   successTitle: {
-    fontFamily: typography.headlineMd.fontFamily,
+    ...typography.headlineMd,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#2E7D32',
+    marginBottom: spacing.xs,
     marginBottom: spacing.sm,
   },
   successDescription: {
-    fontFamily: typography.bodyMd.fontFamily,
+    ...typography.bodyMd,
     fontSize: 13,
-    color: colors.secondary,
+    color: '#2E7D32',
     lineHeight: 18,
   },
   inputWrapper: {
     marginBottom: spacing.lg,
   },
   inputLabel: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: typography.labelMd.fontSize,
+    ...typography.labelMd,
     color: colors.onBackground,
+    fontWeight: '600',
     marginBottom: spacing.xs,
     marginLeft: spacing.xs,
   },
@@ -244,13 +257,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.lg,
+    borderRadius: radius.input,
     paddingHorizontal: spacing.md,
     height: 56,
   },
   inputFocused: {
-    borderColor: colors.primary,
-    borderWidth: 2,
+    borderColor: colors.secondary,
+    borderWidth: 1.5,
   },
   inputIcon: {
     marginRight: spacing.sm,
@@ -258,11 +271,15 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     color: colors.onBackground,
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
+    ...typography.bodyMd,
     height: '100%',
   },
   primaryButton: {
+    borderRadius: radius.button,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
     backgroundColor: colors.primary,
     borderRadius: radius.full,
     height: 56,
@@ -273,13 +290,9 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
-  buttonSuccess: {
-    backgroundColor: '#2E7D32',
-  },
   primaryButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.onPrimary,
   },
   footerLinkContainer: {
@@ -290,11 +303,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   footerLinkText: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: 15,
+    ...typography.labelMd,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.secondary,
   },
 });
 
 export default ForgotPasswordScreen;
+

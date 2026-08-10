@@ -66,10 +66,10 @@ function Sidebar({ active, setActive }) {
       </nav>
       <div className="p-4 border-t border-white/10 flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-[#2F5FFF] flex items-center justify-center font-display font-700 text-sm">
-          SS
+          
         </div>
         <div className="text-sm">
-          <p className="font-medium leading-tight">Sil Shah</p>
+          <p className="font-medium leading-tight">User</p>
           <p className="text-xs text-white/40 leading-tight">Event Organizer</p>
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function OrganizerDashboard() {
         <Topbar dark={dark} setDark={setDark} />
         <main className="p-8 space-y-6">
           <div>
-            <h2 className={`font-display font-800 text-2xl ${dark ? "text-white" : "text-[#14161F]"}`}>Good afternoon, Sil</h2>
+            <h2 className={`font-display font-800 text-2xl ${dark ? "text-white" : "text-[#14161F]"}`}>Good afternoon, User</h2>
             <p className={`text-sm mt-1 ${dark ? "text-white/50" : "text-[#6B7280]"}`}>Here's what's happening across your events today.</p>
           </div>
           <div className="grid grid-cols-4 gap-4">

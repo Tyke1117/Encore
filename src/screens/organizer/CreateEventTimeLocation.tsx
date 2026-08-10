@@ -7,11 +7,15 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import Svg, { Rect, Path, Circle } from 'react-native-svg';
-import { colors } from '../../theme/colors';
+
+const { width } = Dimensions.get('window');
+import { useTheme } from '../../context/ThemeContext';
+import { ColorsType } from '../../theme/colors';
 import { typography } from '../../theme/fonts';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
@@ -23,6 +27,9 @@ interface CreateEventTimeLocationProps {
 }
 
 export default function CreateEventTimeLocation({ route, navigation }: CreateEventTimeLocationProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   const { eventData } = route.params || {};
 
   const [startDate, setStartDate] = useState('24-10-2024');
@@ -54,16 +61,15 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
         startTime,
         endDate,
         endTime,
-        selectedDuration,
-        venue: venueSearch,
+        venue: isVirtual ? 'Virtual Event' : venueSearch,
         isVirtual,
       },
     });
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Control Bar */}
@@ -72,176 +78,201 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
             <Icon name="x" size={22} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
+
         {/* Progress Header */}
         <View style={styles.progressContainer}>
           <View style={styles.progressRow}>
-            <Text style={styles.progressText}>STEP 2 OF 4</Text>
-            <Text style={styles.progressPercent}>Date & Location</Text>
+            <Text style={styles.progressText}>Create Event</Text>
+            <Text style={styles.progressPercent}>66% Complete</Text>
           </View>
           <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '50%' }]} />
+            <View style={[styles.progressBarFill, { width: '66%' }]} />
           </View>
         </View>
 
-        {/* Page Title */}
-        <Text style={styles.pageTitle}>When and where?</Text>
-        <Text style={styles.pageSubTitle}>Set the timeline and pick a venue for your masterpiece.</Text>
+        {/* Stepper Tabs */}
+        <View style={styles.stepperContainer}>
+          <View style={styles.stepItem}>
+            <View style={[styles.stepIconContainer, styles.stepIconChecked]}>
+              <Icon name="check" size={14} color={colors.secondary} />
+            </View>
+            <Text style={[styles.stepLabel, styles.stepLabelChecked]}>Details</Text>
+          </View>
+          <View style={[styles.stepDivider, styles.stepDividerChecked]} />
+          <View style={styles.stepItem}>
+            <View style={[styles.stepIconContainer, styles.stepIconActive]}>
+              <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 12 }}>2</Text>
+            </View>
+            <Text style={[styles.stepLabel, styles.stepLabelActive]}>Time & Location</Text>
+          </View>
+          <View style={styles.stepDivider} />
+          <View style={styles.stepItem}>
+            <View style={styles.stepIconContainer}>
+              <Text style={{ color: colors.onSurfaceVariant, fontSize: 12 }}>3</Text>
+            </View>
+            <Text style={styles.stepLabel}>Tickets</Text>
+          </View>
+        </View>
 
-        {/* Schedule Card */}
-        <View style={[styles.card, shadows.level1]}>
+        <Text style={styles.pageTitle}>Date, Time & Location</Text>
+        <Text style={styles.pageSubTitle}>Schedule your event and select where attendees will gather.</Text>
+
+        {/* Date & Time Card */}
+        <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderIconContainer}>
-              <Icon name="calendar" size={18} color={colors.primaryContainer} />
+              <Icon name="calendar" size={16} color={colors.secondary} />
             </View>
-            <Text style={styles.cardHeaderText}>Schedule</Text>
+            <Text style={styles.cardHeaderText}>Date & Time</Text>
           </View>
 
-          {/* Starts Row */}
           <View style={styles.timeRow}>
             <View style={[styles.timeCol, { marginRight: spacing.sm }]}>
-              <Text style={styles.timeInputLabel}>Starts</Text>
+              <Text style={styles.timeInputLabel}>Start Date</Text>
               <View style={styles.timeInputBox}>
                 <TextInput
                   style={styles.timeTextInput}
                   value={startDate}
                   onChangeText={setStartDate}
+                  placeholder="DD-MM-YYYY"
+                  placeholderTextColor={colors.outline}
                 />
-                <Icon name="calendar" size={16} color={colors.outline} />
+                <Icon name="calendar" size={16} color={colors.onSurfaceVariant} />
               </View>
             </View>
             <View style={styles.timeCol}>
-              <Text style={styles.timeInputLabel}> </Text>
+              <Text style={styles.timeInputLabel}>Start Time</Text>
               <View style={styles.timeInputBox}>
                 <TextInput
                   style={styles.timeTextInput}
                   value={startTime}
                   onChangeText={setStartTime}
+                  placeholder="HH:MM"
+                  placeholderTextColor={colors.outline}
                 />
-                <Icon name="clock" size={16} color={colors.outline} />
+                <Icon name="clock" size={16} color={colors.onSurfaceVariant} />
               </View>
             </View>
           </View>
 
-          {/* Ends Row */}
           <View style={[styles.timeRow, { marginTop: spacing.md }]}>
             <View style={[styles.timeCol, { marginRight: spacing.sm }]}>
-              <Text style={styles.timeInputLabel}>Ends</Text>
+              <Text style={styles.timeInputLabel}>End Date</Text>
               <View style={styles.timeInputBox}>
                 <TextInput
                   style={styles.timeTextInput}
                   value={endDate}
                   onChangeText={setEndDate}
+                  placeholder="DD-MM-YYYY"
+                  placeholderTextColor={colors.outline}
                 />
-                <Icon name="calendar" size={16} color={colors.outline} />
+                <Icon name="calendar" size={16} color={colors.onSurfaceVariant} />
               </View>
             </View>
             <View style={styles.timeCol}>
-              <Text style={styles.timeInputLabel}> </Text>
+              <Text style={styles.timeInputLabel}>End Time</Text>
               <View style={styles.timeInputBox}>
                 <TextInput
                   style={styles.timeTextInput}
                   value={endTime}
                   onChangeText={setEndTime}
+                  placeholder="HH:MM"
+                  placeholderTextColor={colors.outline}
                 />
-                <Icon name="clock" size={16} color={colors.outline} />
+                <Icon name="clock" size={16} color={colors.onSurfaceVariant} />
               </View>
             </View>
           </View>
 
-          {/* Duration Chips */}
+          {/* Quick Duration Chips */}
           <View style={styles.durationContainer}>
-            <Text style={styles.durationLabel}>Duration suggestions</Text>
+            <Text style={styles.durationLabel}>Suggested Durations</Text>
             <View style={styles.chipsRow}>
-              {durationOptions.map((opt) => (
-                <TouchableOpacity
-                  key={opt}
-                  style={[styles.chip, selectedDuration === opt && styles.chipActive]}
-                  onPress={() => handleDurationSelect(opt)}
-                >
-                  <Text style={[styles.chipText, selectedDuration === opt && styles.chipTextActive]}>
-                    {opt}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {durationOptions.map((option) => {
+                const isActive = selectedDuration === option;
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    style={[styles.chip, isActive && styles.chipActive]}
+                    onPress={() => handleDurationSelect(option)}
+                  >
+                    <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Timezone Banner */}
+          <View style={styles.timezoneBanner}>
+            <View style={styles.timezoneIconContainer}>
+              <Icon name="globe" size={14} color={colors.secondary} />
+            </View>
+            <View>
+              <Text style={styles.timezoneTitle}>Indian Standard Time (IST)</Text>
+              <Text style={styles.timezoneSub}>Coordinated Universal Time UTC +05:30</Text>
             </View>
           </View>
         </View>
 
-        {/* Timezone banner */}
-        <View style={styles.timezoneBanner}>
-          <View style={styles.timezoneIconContainer}>
-            <Icon name="globe" size={16} color={colors.secondary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.timezoneTitle}>Timezone: Central European Time</Text>
-            <Text style={styles.timezoneSub}>Automatically detected from location</Text>
-          </View>
-        </View>
-
-        {/* Venue Card */}
-        <View style={[styles.card, shadows.level1, { marginTop: spacing.lg }]}>
+        {/* Location Card */}
+        <View style={[styles.card, { marginTop: spacing.md }]}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderIconContainer}>
-              <Icon name="map-pin" size={18} color={colors.primaryContainer} />
+              <Icon name="map-pin" size={16} color={colors.secondary} />
             </View>
-            <Text style={styles.cardHeaderText}>Venue</Text>
+            <Text style={styles.cardHeaderText}>Location</Text>
           </View>
 
-          <View style={styles.searchBoxContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search for a venue or address..."
-              placeholderTextColor={colors.outline}
-              value={venueSearch}
-              onChangeText={setVenueSearch}
-              editable={!isVirtual}
-            />
-            <Icon name="search" size={18} color={colors.outline} style={styles.searchIcon} />
-          </View>
-
-          {/* Styled Map Preview using SVG */}
           {!isVirtual && (
-            <View style={styles.mapContainer}>
-              <Svg height="100%" width="100%" viewBox="0 0 300 150">
-                {/* Background map land */}
-                <Rect x="0" y="0" width="300" height="150" fill="#E8ECE9" />
-                {/* Green park zones */}
-                <Path d="M 0,0 L 80,0 L 50,70 L 0,40 Z" fill="#D2E2D6" />
-                <Path d="M 180,150 L 300,100 L 300,150 Z" fill="#D2E2D6" />
-                {/* River water body */}
-                <Path d="M 0,110 C 100,120 150,80 300,90 L 300,150 L 0,150 Z" fill="#CADCF2" />
-                {/* Streets/Roads lines */}
-                <Path d="M 0,60 L 300,60" stroke="#FFFFFF" strokeWidth="8" />
-                <Path d="M 100,0 L 100,150" stroke="#FFFFFF" strokeWidth="6" />
-                <Path d="M 220,0 L 220,150" stroke="#FFFFFF" strokeWidth="5" />
-                <Path d="M 0,110 Q 150,50 300,110" stroke="#FFFFFF" strokeWidth="4" />
-                {/* Secondary inner road lines */}
-                <Path d="M 0,60 L 300,60" stroke="#E1E5E2" strokeWidth="2" />
-                <Path d="M 100,0 L 100,150" stroke="#E1E5E2" strokeWidth="2" />
-                {/* Custom target location label bubble */}
-                <Rect x="70" y="25" width="160" height="28" rx="6" fill="#FFFFFF" />
-                <Circle cx="82" cy="39" r="6" fill={colors.primaryContainer} />
-                {/* Venue Name Text inside map bubble */}
-                <Path d="M 144,32 L 152,32 L 152,44 L 144,44 Z" fill="none" />
-              </Svg>
-              <View style={styles.mapOverlayLabel}>
-                <View style={styles.mapIndicatorDot} />
-                <Text style={styles.mapOverlayText}>Digital Art Pavilion</Text>
-                <Text style={styles.mapOverlaySub}>12 Tech Plaza, Creative District</Text>
+            <>
+              {/* Search Location */}
+              <View style={styles.searchBoxContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  value={venueSearch}
+                  onChangeText={setVenueSearch}
+                  placeholder="Search for venue address..."
+                  placeholderTextColor={colors.outline}
+                />
+                <Icon name="search" size={16} color={colors.onSurfaceVariant} style={styles.searchIcon} />
               </View>
-            </View>
+
+              {/* Vector Map Illustration */}
+              <View style={styles.mapContainer}>
+                <Svg height="150" width={width - spacing.md * 4} style={StyleSheet.absoluteFill}>
+                  <Rect x="0" y="0" width="100%" height="100%" fill={isDark ? '#1C1824' : '#F4F2F7'} />
+                  {/* Styled Vector Roads */}
+                  <Path d="M 0 40 L 400 40" stroke={isDark ? '#2D2837' : '#E5E0EA'} strokeWidth="12" />
+                  <Path d="M 0 110 L 400 110" stroke={isDark ? '#2D2837' : '#E5E0EA'} strokeWidth="12" />
+                  <Path d="M 80 0 L 80 150" stroke={isDark ? '#2D2837' : '#E5E0EA'} strokeWidth="16" />
+                  <Path d="M 280 0 L 280 150" stroke={isDark ? '#2D2837' : '#E5E0EA'} strokeWidth="16" />
+                  {/* River or Green block */}
+                  <Rect x="120" y="60" width="120" height="30" fill={isDark ? '#14251C' : '#E8F5E9'} rx="6" />
+                </Svg>
+
+                {/* Floating Map Label */}
+                <View style={styles.mapOverlayLabel}>
+                  <View style={styles.mapIndicatorDot} />
+                  <Text style={styles.mapOverlayText}>Digital Art Pavilion</Text>
+                  <Text style={styles.mapOverlaySub}>Symphony Plaza, Sector 4</Text>
+                </View>
+              </View>
+            </>
           )}
 
-          {/* Virtual checkbox */}
+          {/* Virtual Event Switch Checkbox */}
           <TouchableOpacity
             style={styles.checkboxRow}
-            activeOpacity={0.8}
             onPress={() => setIsVirtual(!isVirtual)}
+            activeOpacity={0.8}
           >
             <View style={[styles.checkbox, isVirtual && styles.checkboxChecked]}>
-              {isVirtual && <Icon name="check" size={14} color={colors.onPrimary} />}
+              {isVirtual && <Icon name="check" size={14} color="#ffffff" />}
             </View>
-            <Text style={styles.checkboxLabel}>This is a virtual event</Text>
+            <Text style={styles.checkboxLabel}>This is a virtual event (Zoom/Meet)</Text>
           </TouchableOpacity>
         </View>
 
@@ -251,52 +282,23 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
             <Icon name="arrow-left" size={16} color={colors.onSurfaceVariant} style={{ marginRight: 8 }} />
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+          <TouchableOpacity 
+            onPress={handleContinue} 
+            activeOpacity={0.8}
+            style={[styles.continueButton, { backgroundColor: colors.secondary, flexDirection: 'row' }]}
+          >
             <Text style={styles.continueText}>Continue</Text>
             <Icon name="arrow-right" size={16} color={colors.onPrimary} style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation Removed */}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ColorsType) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.slate[100],
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    ...typography.headlineMd,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primaryContainer,
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
@@ -326,7 +328,7 @@ const styles = StyleSheet.create({
   },
   progressPercent: {
     ...typography.labelSm,
-    color: colors.onSurface,
+    color: colors.secondary,
     fontWeight: '500',
   },
   progressBarBg: {
@@ -337,12 +339,66 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: colors.primaryContainer,
+    backgroundColor: colors.secondary,
     borderRadius: radius.sm,
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surfaceContainerLow,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  stepItem: {
+    alignItems: 'center',
+  },
+  stepIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceDim,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  stepIconActive: {
+    backgroundColor: colors.secondary,
+  },
+  stepIconChecked: {
+    backgroundColor: colors.secondaryContainer,
+  },
+  stepLabel: {
+    ...typography.labelSm,
+    fontSize: 10,
+    color: colors.onSurfaceVariant,
+  },
+  stepLabelActive: {
+    color: colors.secondary,
+    fontWeight: '600',
+  },
+  stepLabelChecked: {
+    color: colors.secondary,
+    fontWeight: '600',
+  },
+  stepDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.outlineVariant,
+    marginHorizontal: spacing.xs,
+    marginBottom: 14,
+  },
+  stepDividerChecked: {
+    backgroundColor: colors.secondary,
   },
   pageTitle: {
     ...typography.headlineLg,
     color: colors.onSurface,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   pageSubTitle: {
@@ -352,9 +408,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   card: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
     borderRadius: radius.card,
     padding: spacing.lg,
   },
@@ -367,7 +423,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: colors.primaryFixed,
+    backgroundColor: colors.secondaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.sm,
@@ -393,12 +449,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
     borderRadius: radius.input,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    height: 48,
   },
   timeTextInput: {
     ...typography.bodyMd,
@@ -409,7 +465,7 @@ const styles = StyleSheet.create({
   durationContainer: {
     marginTop: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.slate[100],
+    borderTopColor: colors.outlineVariant,
     paddingTop: spacing.md,
   },
   durationLabel: {
@@ -425,13 +481,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 8,
     borderRadius: radius.button,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
   },
   chipActive: {
-    backgroundColor: colors.primaryFixed,
-    borderColor: colors.primaryContainer,
+    backgroundColor: colors.secondaryContainer,
+    borderColor: colors.secondary,
   },
   chipText: {
     ...typography.labelMd,
@@ -439,46 +495,51 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   chipTextActive: {
-    color: colors.onPrimaryFixedVariant,
+    color: colors.secondary,
   },
   timezoneBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.secondaryFixed,
+    backgroundColor: colors.secondaryContainer,
     borderRadius: radius.md,
     padding: spacing.md,
     marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: `${colors.secondary}1a`,
   },
   timezoneIconContainer: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   timezoneTitle: {
     ...typography.labelMd,
     fontWeight: '600',
-    color: colors.onSecondaryFixedVariant,
+    color: colors.onSecondaryContainer,
   },
   timezoneSub: {
     ...typography.labelSm,
     fontSize: 10,
-    color: colors.onSecondaryFixedVariant,
+    color: colors.onSecondaryContainer,
     opacity: 0.8,
     marginTop: 2,
   },
   searchBoxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
     borderRadius: radius.input,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.md,
+    height: 48,
   },
   searchInput: {
     ...typography.bodyMd,
@@ -494,19 +555,19 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
     position: 'relative',
   },
   mapOverlayLabel: {
     position: 'absolute',
     top: 25,
     left: 80,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     paddingVertical: 4,
     paddingHorizontal: spacing.sm,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
     ...shadows.level1,
   },
   mapIndicatorDot: {
@@ -516,7 +577,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primaryContainer,
+    backgroundColor: colors.secondary,
   },
   mapOverlayText: {
     ...typography.labelSm,
@@ -545,8 +606,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   checkboxChecked: {
-    borderColor: colors.primaryContainer,
-    backgroundColor: colors.primaryContainer,
+    borderColor: colors.secondary,
+    backgroundColor: colors.secondary,
   },
   checkboxLabel: {
     ...typography.bodyMd,
@@ -563,6 +624,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
+    marginBottom:50
   },
   backText: {
     ...typography.bodyMd,
@@ -570,17 +632,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   continueButton: {
-    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryContainer,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: radius.button,
+    ...shadows.level1,
+    marginBottom:50
   },
   continueText: {
     ...typography.bodyMd,
-    color: colors.onPrimary,
+    color: '#ffffff',
     fontWeight: '600',
   },
-  // Bottom navigation styles removed
 });

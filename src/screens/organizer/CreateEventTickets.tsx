@@ -8,11 +8,11 @@ import {
   ScrollView,
   StatusBar,
   Switch,
-  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
+import { ColorsType } from '../../theme/colors';
 import { typography } from '../../theme/fonts';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
@@ -24,28 +24,39 @@ interface CreateEventTicketsProps {
 }
 
 export default function CreateEventTickets({ route, navigation }: CreateEventTicketsProps) {
+  const { colors, isDark } = useTheme();
+  const styles = getStyles(colors);
+
   const { eventData } = route.params || {};
 
-  const [isFree, setIsFree] = useState(true);
-  const [ticketPrice, setTicketPrice] = useState('0.00');
-  const [capacity, setCapacity] = useState('50');
+  const [ticketType, setTicketType] = useState<'free' | 'paid' | 'invite'>('free');
+  const [ticketPrice, setTicketPrice] = useState('0');
+  const [ticketQuantity, setTicketQuantity] = useState(100);
+  const [ticketName, setTicketName] = useState('General Admission');
   const [enableWaitlist, setEnableWaitlist] = useState(false);
+  const [isTransferable, setIsTransferable] = useState(true);
 
   const handlePublish = () => {
     navigation.navigate('EventPublished', {
       eventData: {
         ...eventData,
-        isFree,
-        ticketPrice: isFree ? '0.00' : ticketPrice,
-        capacity,
+        ticketType,
+        ticketPrice: ticketType === 'free' ? '0' : ticketPrice,
+        ticketQuantity,
+        ticketName,
         enableWaitlist,
+        isTransferable,
       },
     });
   };
 
+  const adjustQuantity = (amount: number) => {
+    setTicketQuantity(Math.max(1, ticketQuantity + amount));
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Control Bar */}
@@ -54,9 +65,20 @@ export default function CreateEventTickets({ route, navigation }: CreateEventTic
             <Icon name="x" size={22} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
-        {/* Step indicators */}
+
+        {/* Progress Header */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressRow}>
+            <Text style={styles.progressText}>Create Event</Text>
+            <Text style={styles.progressPercent}>99% Complete</Text>
+          </View>
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: '99%' }]} />
+          </View>
+        </View>
+
+        {/* Stepper Tabs */}
         <View style={styles.stepperContainer}>
-          {/* Details (Checked) */}
           <View style={styles.stepItem}>
             <View style={[styles.stepIconContainer, styles.stepIconChecked]}>
               <Icon name="check" size={14} color={colors.secondary} />
@@ -64,190 +86,166 @@ export default function CreateEventTickets({ route, navigation }: CreateEventTic
             <Text style={[styles.stepLabel, styles.stepLabelChecked]}>Details</Text>
           </View>
           <View style={[styles.stepDivider, styles.stepDividerChecked]} />
-
-          {/* Location (Checked) */}
           <View style={styles.stepItem}>
             <View style={[styles.stepIconContainer, styles.stepIconChecked]}>
               <Icon name="check" size={14} color={colors.secondary} />
             </View>
-            <Text style={[styles.stepLabel, styles.stepLabelChecked]}>Location</Text>
+            <Text style={[styles.stepLabel, styles.stepLabelChecked]}>Time & Location</Text>
           </View>
-          <View style={[styles.stepDivider, styles.stepDividerActive]} />
-
-          {/* Tickets (Active) */}
+          <View style={[styles.stepDivider, styles.stepDividerChecked]} />
           <View style={styles.stepItem}>
             <View style={[styles.stepIconContainer, styles.stepIconActive]}>
-              <Text style={styles.stepNumberActive}>3</Text>
+              <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 12 }}>3</Text>
             </View>
             <Text style={[styles.stepLabel, styles.stepLabelActive]}>Tickets</Text>
           </View>
         </View>
 
-        {/* Page Title */}
-        <Text style={styles.pageTitle}>Tickets & Capacity</Text>
-        <Text style={styles.pageSubTitle}>Set your ticket pricing and attendee limits for this event.</Text>
+        <Text style={styles.pageTitle}>Ticket Setup</Text>
+        <Text style={styles.pageSubTitle}>Set ticket pricing and quantity limitations for registrations.</Text>
 
-        {/* Free/Paid selector buttons */}
+        {/* Ticket Selector Row */}
         <View style={styles.selectorRow}>
-          {/* Free Event selector */}
           <TouchableOpacity
-            style={[
-              styles.selectorCard,
-              isFree && styles.selectorCardActive,
-              shadows.level1,
-            ]}
-            onPress={() => {
-              setIsFree(true);
-              setTicketPrice('0.00');
-            }}
+            style={[styles.selectorCard, ticketType === 'free' && styles.selectorCardActive]}
+            onPress={() => setTicketType('free')}
+            activeOpacity={0.8}
           >
-            <View style={[styles.selectorIconCircle, isFree && styles.selectorIconCircleActive]}>
-              <Icon name="tag" size={20} color={isFree ? colors.primaryContainer : colors.onSurfaceVariant} />
+            <View style={[styles.selectorIconCircle, ticketType === 'free' && styles.selectorIconCircleActive]}>
+              <Icon name="gift" size={18} color={colors.secondary} />
             </View>
-            <Text style={styles.selectorTitle}>Free Event</Text>
-            <Text style={styles.selectorSub}>No charge for entry</Text>
+            <Text style={[styles.selectorTitle, ticketType === 'free' && styles.selectorTitleActive]}>Free</Text>
+            <Text style={styles.selectorSub}>Guests register for free</Text>
           </TouchableOpacity>
 
-          {/* Paid Event selector */}
           <TouchableOpacity
-            style={[
-              styles.selectorCard,
-              !isFree && styles.selectorCardActive,
-              shadows.level1,
-            ]}
-            onPress={() => setIsFree(false)}
+            style={[styles.selectorCard, ticketType === 'paid' && styles.selectorCardActive]}
+            onPress={() => setTicketType('paid')}
+            activeOpacity={0.8}
           >
-            <View style={[styles.selectorIconCircle, !isFree && styles.selectorIconCircleActive]}>
-              <Icon name="credit-card" size={20} color={!isFree ? colors.primaryContainer : colors.onSurfaceVariant} />
+            <View style={[styles.selectorIconCircle, ticketType === 'paid' && styles.selectorIconCircleActive]}>
+              <Icon name="credit-card" size={18} color={colors.secondary} />
             </View>
-            <Text style={styles.selectorTitle}>Paid Event</Text>
-            <Text style={styles.selectorSub}>Charge for tickets</Text>
+            <Text style={[styles.selectorTitle, ticketType === 'paid' && styles.selectorTitleActive]}>Paid</Text>
+            <Text style={styles.selectorSub}>Guests pay a ticket fee</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.selectorCard, ticketType === 'invite' && styles.selectorCardActive]}
+            onPress={() => setTicketType('invite')}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.selectorIconCircle, ticketType === 'invite' && styles.selectorIconCircleActive]}>
+              <Icon name="mail" size={18} color={colors.secondary} />
+            </View>
+            <Text style={[styles.selectorTitle, ticketType === 'invite' && styles.selectorTitleActive]}>Invite</Text>
+            <Text style={styles.selectorSub}>Requires explicit approval</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Ticket Price input */}
-        <View style={styles.formGroup}>
-          <Text style={styles.fieldLabel}>Ticket Price (USD)</Text>
-          <View style={[styles.inputWithIcon, isFree && styles.disabledInput]}>
-            <Text style={[styles.prefixText, isFree && styles.disabledText]}>$</Text>
+        {/* Details Card */}
+        <View style={styles.card}>
+          {/* Ticket Name */}
+          <View style={styles.formGroup}>
+            <Text style={styles.fieldLabel}>Ticket Name</Text>
             <TextInput
-              style={[styles.textInput, isFree && styles.disabledText]}
-              placeholder="0.00"
+              style={styles.textInput}
+              value={ticketName}
+              onChangeText={setTicketName}
+              placeholder="e.g. General Admission"
               placeholderTextColor={colors.outline}
-              value={ticketPrice}
-              onChangeText={setTicketPrice}
-              keyboardType="decimal-pad"
-              editable={!isFree}
             />
           </View>
+
+          {/* Ticket Price (Paid only) */}
+          {ticketType === 'paid' && (
+            <View style={styles.formGroup}>
+              <Text style={styles.fieldLabel}>Ticket Price</Text>
+              <View style={styles.priceInputContainer}>
+                <Text style={styles.currencySymbol}>₹</Text>
+                <TextInput
+                  style={[styles.textInput, styles.priceInput]}
+                  value={ticketPrice}
+                  onChangeText={setTicketPrice}
+                  keyboardType="numeric"
+                  placeholder="299"
+                  placeholderTextColor={colors.outline}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Quantity limitation counter */}
+          <View style={styles.formGroup}>
+            <Text style={styles.fieldLabel}>Quantity Available</Text>
+            <View style={styles.quantityRow}>
+              <TouchableOpacity style={styles.quantityBtn} onPress={() => adjustQuantity(-10)} activeOpacity={0.7}>
+                <Icon name="minus" size={16} color={colors.secondary} />
+              </TouchableOpacity>
+              <View style={styles.quantityDisplay}>
+                <Text style={styles.quantityVal}>{ticketQuantity}</Text>
+                <Text style={styles.quantityLabel}>Tickets</Text>
+              </View>
+              <TouchableOpacity style={styles.quantityBtn} onPress={() => adjustQuantity(10)} activeOpacity={0.7}>
+                <Icon name="plus" size={16} color={colors.secondary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Transferability Checkbox */}
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setIsTransferable(!isTransferable)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.checkbox, isTransferable && styles.checkboxChecked]}>
+              {isTransferable && <Icon name="check" size={14} color="#ffffff" />}
+            </View>
+            <Text style={styles.checkboxLabel}>Tickets are transferable to other students</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Total Capacity input */}
-        <View style={styles.formGroup}>
-          <Text style={styles.fieldLabel}>Total Capacity</Text>
-          <TextInput
-            style={styles.textInputFull}
-            placeholder="e.g. 100"
-            placeholderTextColor={colors.outline}
-            value={capacity}
-            onChangeText={setCapacity}
-            keyboardType="number-pad"
-          />
-        </View>
-
-        {/* Enable Waitlist card */}
-        <View style={[styles.waitlistCard, shadows.level1]}>
+        {/* Waitlist settings */}
+        <View style={styles.waitlistCard}>
           <View style={styles.waitlistIconCircle}>
+            <Icon name="users" size={16} color={colors.secondary} />
             <Icon name="clock" size={18} color={colors.secondary} />
           </View>
-          <View style={{ flex: 1, paddingRight: spacing.sm }}>
-            <Text style={styles.waitlistTitle}>Enable Waitlist</Text>
-            <Text style={styles.waitlistSub}>Collect signups even after tickets sell out.</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.waitlistTitle}>Waitlist Registration</Text>
+            <Text style={styles.waitlistSub}>Open waitlist queue when tickets sell out</Text>
           </View>
           <Switch
             value={enableWaitlist}
             onValueChange={setEnableWaitlist}
-            trackColor={{ false: colors.surfaceDim, true: colors.secondaryContainer }}
+            trackColor={{ false: colors.surfaceDim, true: colors.surfaceDim }}
             thumbColor={enableWaitlist ? colors.secondary : '#f4f3f4'}
           />
         </View>
 
-        {/* Venue Preview Section */}
-        <View style={styles.previewContainer}>
-          <ImageBackground
-            source={{
-              uri: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=60',
-            }}
-            style={styles.previewBg}
-            imageStyle={{ borderRadius: radius.card }}
-          >
-            {/* Dark overlay for text contrast */}
-            <View style={styles.previewOverlay}>
-              <Text style={styles.previewTag}>Venue Preview</Text>
-              <Text style={styles.previewTitle}>Grand Hall, Central Plaza</Text>
-            </View>
-          </ImageBackground>
-        </View>
-
-        {/* Tier Chip */}
-        <View style={[styles.tierCard, shadows.level1]}>
-          <Icon name="tag" size={16} color={colors.primaryContainer} style={{ marginRight: spacing.sm }} />
-          <View>
-            <Text style={styles.tierTitle}>Tier 1</Text>
-            <Text style={styles.tierSub}>Early Access</Text>
-          </View>
-        </View>
-
         {/* Footer Actions */}
         <View style={styles.footerRow}>
-          <TouchableOpacity style={styles.saveDraftButton}>
-            <Text style={styles.saveDraftText}>Save Draft</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-left" size={16} color={colors.onSurfaceVariant} style={{ marginRight: 8 }} />
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.publishButton} onPress={handlePublish}>
-            <Text style={styles.publishButtonText}>Publish Event</Text>
+          <TouchableOpacity 
+            onPress={handlePublish} 
+            activeOpacity={0.8}
+            style={[styles.publishButton, { backgroundColor: colors.secondary, flexDirection: 'row' }]}
+          >
+            <Text style={styles.publishText}>Publish Event</Text>
+            <Icon name="check" size={16} color={colors.onPrimary} style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Bottom Navigation Removed */}
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: ColorsType) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.slate[100],
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    ...typography.headlineMd,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primaryContainer,
   },
   scrollContent: {
     paddingHorizontal: spacing.md,
@@ -262,6 +260,35 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: spacing.xs,
   },
+  progressContainer: {
+    marginBottom: spacing.md,
+  },
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  progressText: {
+    ...typography.labelSm,
+    color: colors.onSurfaceVariant,
+    fontWeight: '700',
+  },
+  progressPercent: {
+    ...typography.labelSm,
+    color: colors.secondary,
+    fontWeight: '500',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: colors.surfaceContainer,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.secondary,
+    borderRadius: radius.sm,
+  },
   stepperContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -271,39 +298,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radius.md,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   stepItem: {
     alignItems: 'center',
-    flexDirection: 'row',
   },
   stepIconContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.surfaceDim,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 6,
+    marginBottom: 4,
   },
   stepIconActive: {
-    backgroundColor: colors.primaryContainer,
+    backgroundColor: colors.secondary,
   },
   stepIconChecked: {
-    backgroundColor: colors.secondaryFixed,
-  },
-  stepNumberActive: {
-    ...typography.labelSm,
-    color: colors.onPrimary,
-    fontWeight: '700',
+    backgroundColor: colors.secondaryContainer,
   },
   stepLabel: {
     ...typography.labelSm,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.onSurfaceVariant,
   },
   stepLabelActive: {
-    color: colors.primary,
-    fontWeight: '700',
+    color: colors.secondary,
+    fontWeight: '600',
   },
   stepLabelChecked: {
     color: colors.secondary,
@@ -314,16 +337,15 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.outlineVariant,
     marginHorizontal: spacing.xs,
+    marginBottom: 14,
   },
   stepDividerChecked: {
     backgroundColor: colors.secondary,
   },
-  stepDividerActive: {
-    backgroundColor: colors.primaryContainer,
-  },
   pageTitle: {
     ...typography.headlineLg,
     color: colors.onSurface,
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   pageSubTitle: {
@@ -334,33 +356,34 @@ const styles = StyleSheet.create({
   },
   selectorRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
     marginBottom: spacing.lg,
   },
   selectorCard: {
     flex: 1,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.slate[200],
+    borderColor: colors.outlineVariant,
     borderRadius: radius.card,
     padding: spacing.md,
     alignItems: 'center',
   },
   selectorCardActive: {
-    borderColor: colors.primaryContainer,
-    backgroundColor: colors.surfaceContainerLow,
+    borderColor: colors.secondary,
+    backgroundColor: colors.secondaryContainer,
+    borderWidth: 1.5,
   },
   selectorIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.slate[50],
+    backgroundColor: colors.surfaceContainerLow,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
   selectorIconCircleActive: {
-    backgroundColor: colors.primaryFixed,
+    backgroundColor: colors.surface,
   },
   selectorTitle: {
     ...typography.labelMd,
@@ -368,13 +391,24 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
     marginBottom: 2,
   },
+  selectorTitleActive: {
+    color: colors.secondary,
+  },
   selectorSub: {
     ...typography.labelSm,
     fontSize: 10,
     color: colors.onSurfaceVariant,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.card,
+    padding: spacing.lg,
   },
   formGroup: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   fieldLabel: {
     ...typography.labelMd,
@@ -382,150 +416,151 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: spacing.sm,
   },
-  inputWithIcon: {
+  textInput: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderRadius: radius.input,
+    paddingHorizontal: spacing.md,
+    height: 48,
+    color: colors.onSurface,
+    ...typography.bodyMd,
+  },
+  priceInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: colors.slate[200],
-    borderRadius: radius.input,
-    paddingHorizontal: spacing.md,
+    position: 'relative',
   },
-  prefixText: {
-    ...typography.bodyMd,
+  currencySymbol: {
+    position: 'absolute',
+    left: spacing.md,
+    zIndex: 1,
+    ...typography.headlineMd,
     color: colors.onSurface,
-    fontWeight: '600',
-    marginRight: 4,
   },
-  textInput: {
+  priceInput: {
+    paddingLeft: 30,
     flex: 1,
-    color: colors.onSurface,
-    paddingVertical: spacing.sm,
-    ...typography.bodyMd,
   },
-  textInputFull: {
+  quantityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.surfaceContainerLow,
-    borderWidth: 1,
-    borderColor: colors.slate[200],
     borderRadius: radius.input,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    color: colors.onSurface,
-    ...typography.bodyMd,
-  },
-  disabledInput: {
-    backgroundColor: colors.surfaceDim,
+    borderWidth: 1,
     borderColor: colors.outlineVariant,
+    paddingVertical: spacing.xs,
   },
-  disabledText: {
+  quantityBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.level1,
+  },
+  quantityDisplay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityVal: {
+    ...typography.headlineMd,
+    fontWeight: '700',
+    color: colors.onSurface,
+  },
+  quantityLabel: {
+    ...typography.labelSm,
     color: colors.onSurfaceVariant,
-    opacity: 0.6,
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.outline,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
+  },
+  checkboxChecked: {
+    borderColor: colors.secondary,
+    backgroundColor: colors.secondary,
+  },
+  checkboxLabel: {
+    ...typography.bodyMd,
+    color: colors.onSurface,
   },
   waitlistCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.secondaryFixed,
+    backgroundColor: colors.secondaryContainer,
     borderRadius: radius.card,
     padding: spacing.md,
+    marginTop: spacing.lg,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: `${colors.secondary}1a`,
   },
   waitlistIconCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   waitlistTitle: {
     ...typography.labelMd,
     fontWeight: '700',
-    color: colors.onSecondaryFixedVariant,
+    color: colors.onSecondaryContainer,
   },
   waitlistSub: {
     ...typography.labelSm,
     fontSize: 10,
-    color: colors.onSecondaryFixedVariant,
+    color: colors.onSecondaryContainer,
     opacity: 0.8,
     marginTop: 2,
-  },
-  previewContainer: {
-    height: 120,
-    borderRadius: radius.card,
-    overflow: 'hidden',
-    marginBottom: spacing.md,
-  },
-  previewBg: {
-    width: '100%',
-    height: '100%',
-  },
-  previewOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(37, 25, 19, 0.45)', // dark transparent wash
-    justifyContent: 'flex-end',
-    padding: spacing.md,
-  },
-  previewTag: {
-    ...typography.labelSm,
-    fontSize: 9,
-    color: '#ffffff',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
-    opacity: 0.8,
-  },
-  previewTitle: {
-    ...typography.headlineMd,
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  tierCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryFixed,
-    borderRadius: radius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    alignSelf: 'flex-start',
-    marginBottom: spacing.xl,
-  },
-  tierTitle: {
-    ...typography.labelSm,
-    fontWeight: '700',
-    color: colors.onPrimaryFixed,
-  },
-  tierSub: {
-    ...typography.labelSm,
-    fontSize: 9,
-    color: colors.onPrimaryFixedVariant,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.xl,
   },
-  saveDraftButton: {
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
+    marginBottom:50
   },
-  saveDraftText: {
+  backText: {
     ...typography.bodyMd,
     color: colors.onSurfaceVariant,
     fontWeight: '600',
   },
   publishButton: {
-    backgroundColor: colors.primaryContainer,
+    alignItems: 'center',
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     borderRadius: radius.button,
+    ...shadows.level1,
+    marginBottom:50
   },
-  publishButtonText: {
+  publishText: {
     ...typography.bodyMd,
-    color: colors.onPrimary,
+    color: '#ffffff',
     fontWeight: '600',
   },
-  // Bottom navigation styles removed
 });
