@@ -69,13 +69,19 @@ const initialNotifications: NotificationItem[] = [
 
 export default function NotificationScreen({ navigation }: { navigation: any }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'reminder' | 'update' | 'alert'>('all');
   const { colors, isDark } = useTheme();
+
+  const filteredNotifications = notifications.filter((notif) => {
+    return selectedCategory === 'all' || notif.type === selectedCategory;
+  });
 
   const toggleRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
     );
   };
+
 
   const clearAll = () => {
     setNotifications([]);
@@ -163,12 +169,36 @@ export default function NotificationScreen({ navigation }: { navigation: any }) 
         )}
       </View>
 
+      {/* Category Filter Chips */}
+      <View style={[styles.categoryContainer, { borderBottomColor: colors.outlineVariant }]}>
+        {(['all', 'reminder', 'update', 'alert'] as const).map((cat) => {
+          const isActive = selectedCategory === cat;
+          const label = cat === 'all' ? 'All' : cat === 'reminder' ? 'Reminders' : cat === 'update' ? 'Updates' : 'Alerts';
+          return (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.categoryTab,
+                { borderColor: colors.outlineVariant },
+                isActive && { backgroundColor: colors.primary, borderColor: colors.primary }
+              ]}
+              onPress={() => setSelectedCategory(cat)}
+            >
+              <Text style={[styles.categoryTabText, { color: colors.onSurfaceVariant }, isActive && { color: colors.onPrimary }]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <FlatList
-        data={notifications}
+        data={filteredNotifications}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <View style={[styles.emptyIconCircle, { backgroundColor: colors.surfaceContainer }]}>
@@ -293,4 +323,24 @@ const styles = StyleSheet.create({
     ...typography.bodyMd,
     textAlign: 'center',
   },
+  categoryContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    gap: spacing.sm,
+  },
+  categoryTab: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radius.round,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryTabText: {
+    ...typography.labelSm,
+    fontWeight: '600',
+  },
 });
+

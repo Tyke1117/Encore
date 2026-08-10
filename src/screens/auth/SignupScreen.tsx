@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,9 +12,12 @@ import {
   StatusBar,
   Pressable,
   Alert,
+  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Logo from '../../components/Logo';
+
 
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -41,6 +44,25 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   
   // Toggles and checkboxes
   const [showPassword, setShowPassword] = useState(false);
@@ -130,18 +152,20 @@ const handleSignup = async () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Top Header */}
-          <View style={styles.headerContainer}>
-            <TouchableOpacity 
-              onPress={() => navigation?.goBack()} 
-              style={styles.backButton}
-              disabled={isLoading}
-            >
-              <MaterialCommunityIcons name="arrow-left" size={24} color={colors.onBackground} />
-            </TouchableOpacity>
-            <Text style={styles.welcomeTitle}>Create Account</Text>
-            <Text style={styles.subtitle}>Sign up to search, book, and enjoy events</Text>
-          </View>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: '100%' }}>
+            {/* Top Header */}
+            <View style={styles.headerContainer}>
+              <TouchableOpacity 
+                onPress={() => navigation?.goBack()} 
+                style={styles.backButton}
+                disabled={isLoading}
+              >
+                <MaterialCommunityIcons name="arrow-left" size={24} color={colors.onBackground} />
+              </TouchableOpacity>
+              <Logo size="sm" />
+              <Text style={[styles.welcomeTitle, { marginTop: spacing.sm }]}>Create Account</Text>
+              <Text style={styles.subtitle}>Sign up to search, find and book college events</Text>
+            </View>
 
           {/* Form */}
           <View style={styles.formContainer}>
@@ -340,6 +364,7 @@ const handleSignup = async () => {
               <Text style={styles.footerLink}>Log In</Text>
             </TouchableOpacity>
           </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

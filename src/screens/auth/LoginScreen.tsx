@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,9 +12,12 @@ import {
   StatusBar,
   Pressable,
   Alert,
+  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Logo from '../../components/Logo';
+
 
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -47,6 +50,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
 
   // Focus states for input borders
   const [isEmailFocused, setIsEmailFocused] = useState(false);
@@ -165,11 +187,13 @@ const handleLogin = async () => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Top Logo and Header */}
-          <View style={styles.headerContainer}>
-            <Text style={styles.welcomeTitle}> Welcome Back </Text>
-            <Text style={styles.subtitle}>Log in to discover and manage premium events</Text>
-          </View>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: '100%', alignItems: 'center' }}>
+            {/* Top Logo and Header */}
+            <View style={styles.headerContainer}>
+              <Logo size="lg" />
+              <Text style={styles.welcomeTitle}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Log in to discover and manage premium events</Text>
+            </View>
 
           {/* Form */}
           <View style={styles.formContainer}>
@@ -330,6 +354,7 @@ const handleLogin = async () => {
               <Text style={styles.footerLink}>Create Account</Text>
             </TouchableOpacity>
           </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

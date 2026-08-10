@@ -17,9 +17,9 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
       case 'sm':
         return { icon: 20, fontSize: 18, containerSize: 32 };
       case 'lg':
-        return { icon: 40, fontSize: 36, containerSize: 64 };
+        return { icon: 42, fontSize: 36, containerSize: 72 };
       default: // md
-        return { icon: 26, fontSize: 24, containerSize: 44 };
+        return { icon: 26, fontSize: 24, containerSize: 48 };
     }
   };
 
@@ -28,12 +28,15 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[colors.secondary, colors.tertiary, colors.primary]}
+        colors={[colors.primary, colors.secondary, colors.tertiary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.logoIconBg, { width: dims.containerSize, height: dims.containerSize, borderRadius: dims.containerSize / 2 }]}
+        style={[
+          styles.logoIconBg,
+          { width: dims.containerSize, height: dims.containerSize, borderRadius: dims.containerSize / 2 }
+        ]}
       >
-        <MaterialCommunityIcons name="lightning-bolt" size={dims.icon} color="#ffffff" />
+        <MaterialCommunityIcons name="music-circle" size={dims.icon} color="#ffffff" />
       </LinearGradient>
       {showText && (
         <Text style={[styles.logoText, { fontSize: dims.fontSize, color: colors.onSurface }]}>
@@ -49,16 +52,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 12,
   },
   logoIconBg: {
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
   },
   logoText: {
-    fontFamily: 'System',
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: -1.2,
+    fontStyle: 'italic',
   },
 });
 
