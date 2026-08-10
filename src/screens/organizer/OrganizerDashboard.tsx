@@ -50,6 +50,39 @@ interface QuickAction {
   icon: IoniconName;
 }
 
+interface OrganizerDashboardProps {
+  navigation: any;
+}
+
+const stats: StatCardData[] = [
+  { id: '1', label: 'Total Events', value: '18', icon: 'calendar-outline', tint: colors.primary },
+  { id: '2', label: 'Active Events', value: '5', icon: 'flash-outline', tint: colors.tertiary },
+  { id: '3', label: 'Registrations', value: '742', icon: 'people-outline', tint: colors.secondary },
+  { id: '4', label: 'Revenue', value: '₹28.4K', icon: 'wallet-outline', tint: colors.primaryContainer },
+];
+
+const quickActions: QuickAction[] = [
+  { id: '1', label: 'Create Event', icon: 'add-circle-outline' },
+  { id: '2', label: 'Manage Events', icon: 'file-tray-full-outline' },
+  { id: '3', label: 'Participants', icon: 'people-outline' },
+  { id: '4', label: 'Analytics', icon: 'bar-chart-outline' },
+  { id: '5', label: 'Certificates', icon: 'ribbon-outline' },
+  { id: '6', label: 'Announcements', icon: 'megaphone-outline' },
+];
+
+const recentRegistrations: RegistrationItem[] = [
+  { id: '1', studentName: 'Aarav Mehta', eventName: 'Encore Hackathon 2026', time: '5 min ago', status: 'Confirmed' },
+  { id: '2', studentName: 'Bhavika Patel', eventName: 'Cultural Night', time: '22 min ago', status: 'Pending' },
+  { id: '3', studentName: 'Rohan Iyer', eventName: 'AI/ML Workshop', time: '1 hr ago', status: 'Confirmed' },
+  { id: '4', studentName: 'Diya Shah', eventName: 'Cultural Night', time: '2 hr ago', status: 'Cancelled' },
+];
+
+const upcomingEvents: UpcomingEventItem[] = [
+  { id: '1', name: 'Cultural Night', date: '22 Jul', time: '6:00 PM', venue: 'Open Air Theatre', seatsLeft: 40, status: 'Filling Fast' },
+  { id: '2', name: 'AI/ML Workshop', date: '25 Jul', time: '10:00 AM', venue: 'Seminar Hall B', seatsLeft: 104, status: 'Open' },
+  { id: '3', name: 'Sports Meet', date: '02 Aug', time: '8:00 AM', venue: 'Ground', seatsLeft: 0, status: 'Closed' },
+];
+
 function initialsOf(name: string): string {
   return name
     .split(' ')
@@ -166,6 +199,9 @@ function QuickActionButton({ item, navigation }: { item: QuickAction; navigation
 
   return (
     <Pressable style={styles.quickAction} onPress={handlePress}>
+function QuickActionButton({ item, onPress }: { item: QuickAction; onPress: () => void }) {
+  return (
+    <Pressable style={styles.quickAction} onPress={onPress}>
       <View style={styles.quickActionIconWrap}>
         <Ionicons name={item.icon} size={20} color={colors.secondary} />
       </View>
@@ -212,9 +248,10 @@ function UpcomingEventCard({ item }: { item: UpcomingEventItem }) {
     return colors.error;
   };
 
+function UpcomingEventCard({ item, onPress }: { item: UpcomingEventItem; onPress: () => void }) {
   const chipColor = eventStatusColor(item.status);
   return (
-    <View style={styles.upcomingCard}>
+    <Pressable style={styles.upcomingCard} onPress={onPress}>
       <View style={styles.upcomingDateBlock}>
         <Text style={styles.upcomingDateDay}>{item.date.split(' ')[0]}</Text>
         <Text style={styles.upcomingDateMonth}>{item.date.split(' ')[1]}</Text>
@@ -227,7 +264,7 @@ function UpcomingEventCard({ item }: { item: UpcomingEventItem }) {
       <View style={[styles.statusChip, { backgroundColor: `${chipColor}12` }]}>
         <Text style={[styles.statusChipText, { color: chipColor }]}>{item.status}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -284,6 +321,16 @@ export default function OrganizerDashboard({ navigation }: { navigation: any }) 
     { id: '2', name: 'AI/ML Workshop', date: '25 Jul', time: '10:00 AM', venue: 'Seminar Hall B', seatsLeft: 104, status: 'Open' },
     { id: '3', name: 'Sports Meet', date: '02 Aug', time: '8:00 AM', venue: 'Ground', seatsLeft: 0, status: 'Closed' },
   ];
+export default function OrganizerDashboard({ navigation }: OrganizerDashboardProps) {
+  const handleQuickAction = (id: QuickAction['id']) => {
+    if (id === '1') {
+      navigation.navigate('CreateEventDetails');
+    } else if (id === '3') {
+      navigation.navigate('Volunteers');
+    }
+    // Other quick actions (Manage Events, Analytics, Certificates, Announcements)
+    // are not wired yet — no matching screens exist this week.
+  };
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -306,6 +353,11 @@ export default function OrganizerDashboard({ navigation }: { navigation: any }) 
         <View style={styles.quickActionsGrid}>
           {quickActions.map((item) => (
             <QuickActionButton key={item.id} item={item} navigation={navigation} />
+            <QuickActionButton
+              key={item.id}
+              item={item}
+              onPress={() => handleQuickAction(item.id)}
+            />
           ))}
         </View>
 
@@ -316,7 +368,11 @@ export default function OrganizerDashboard({ navigation }: { navigation: any }) 
 
         <Text style={styles.sectionTitle}>Upcoming Events</Text>
         {upcomingEvents.map((item) => (
-          <UpcomingEventCard key={item.id} item={item} />
+          <UpcomingEventCard
+            key={item.id}
+            item={item}
+            onPress={() => navigation.navigate('EditEventScreen', { event: item })}
+          />
         ))}
 
         <Text style={styles.sectionTitle}>AI Insight</Text>
@@ -330,6 +386,12 @@ export default function OrganizerDashboard({ navigation }: { navigation: any }) 
       >
         <Ionicons name="add" size={26} color="#ffffff" />
       </TouchableOpacity>
+      <Pressable
+        style={styles.fab}
+        onPress={() => navigation.navigate('CreateEventDetails')}
+      >
+        <Ionicons name="add" size={26} color={colors.onPrimary} />
+      </Pressable>
     </View>
   );
 }
@@ -341,10 +403,9 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: 140,
   },
 
-  // Header
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,7 +458,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     backgroundColor: colors.tertiary,
   },
 
-  // Section title
   sectionTitle: {
     ...typography.headlineMd,
     fontWeight: '700',
@@ -406,7 +466,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  // Stats grid
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -441,7 +500,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     marginTop: 2,
   },
 
-  // Featured event
   featuredCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.card,
@@ -510,7 +568,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     color: colors.onSurfaceVariant,
   },
 
-  // Quick actions
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -542,7 +599,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Registration cards
   registrationCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -584,7 +640,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     marginTop: 2,
   },
 
-  // Upcoming events
   upcomingCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -634,7 +689,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     marginTop: 2,
   },
 
-  // Status chip (shared by registrations + upcoming events)
   statusChip: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
@@ -645,7 +699,6 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     fontWeight: '700',
   },
 
-  // AI insight
   aiCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -673,6 +726,7 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
 
   // FAB
   fabContainer: {
+  fab: {
     position: 'absolute',
     bottom: spacing.lg,
     right: spacing.lg,

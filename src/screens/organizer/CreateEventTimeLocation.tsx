@@ -6,10 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import Svg, { Rect, Path, Circle } from 'react-native-svg';
 
@@ -74,7 +74,7 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Control Bar */}
         <View style={styles.topControlRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('OrganizerDashboard')}>
+         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('OrganizerTabs', { screen: 'OrganizerDashboard' })}>
             <Icon name="x" size={22} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
