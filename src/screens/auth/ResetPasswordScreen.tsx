@@ -12,14 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-
+import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
-import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
 
 interface ResetPasswordScreenProps {
   navigation: any;
@@ -68,7 +66,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ naviga
       } else {
         setStrengthLevel('medium');
         setStrengthText('Medium (Add numbers/caps/special symbols)');
-        setStrengthColor(colors.primary); // Orange
+        setStrengthColor('#F57C00'); // Orange
       }
     }
   }, [newPassword]);
@@ -128,7 +126,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ naviga
                 <MaterialCommunityIcons 
                   name="lock-outline" 
                   size={20} 
-                  color={isPasswordFocused ? colors.secondary : colors.outline} 
+                  color={isPasswordFocused ? colors.primary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -185,7 +183,7 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ naviga
                 <MaterialCommunityIcons 
                   name="lock-check-outline" 
                   size={20} 
-                  color={isConfirmPasswordFocused ? colors.secondary : colors.outline} 
+                  color={isConfirmPasswordFocused ? colors.primary : colors.outline} 
                   style={styles.inputIcon}
                 />
                 <TextInput
@@ -220,14 +218,14 @@ export const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ naviga
 
             {/* Action button */}
             <TouchableOpacity 
+              style={[
+                styles.primaryButton, 
+                (isLoading || isSuccess || !newPassword || newPassword !== confirmPassword || strengthLevel === 'weak') && styles.buttonDisabled,
+                isSuccess && styles.buttonSuccess
+              ]} 
               onPress={isSuccess ? () => navigation?.navigate('Login') : handleUpdatePassword}
               disabled={isLoading || (!isSuccess && (!newPassword || newPassword !== confirmPassword || strengthLevel === 'weak'))}
               activeOpacity={0.8}
-              style={[
-                styles.primaryButton,
-                { backgroundColor: isSuccess ? '#2E7D32' : colors.secondary },
-                (isLoading || (!isSuccess && (!newPassword || newPassword !== confirmPassword || strengthLevel === 'weak'))) && styles.buttonDisabled
-              ]}
             >
               <Text style={styles.primaryButtonText}>
                 {isSuccess ? 'Back to Login' : 'Update Password'}
@@ -266,14 +264,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   welcomeTitle: {
-    ...typography.headlineLgMobile,
+    fontFamily: typography.headlineLgMobile.fontFamily,
+    fontSize: typography.headlineLgMobile.fontSize,
+    fontWeight: typography.headlineLgMobile.fontWeight,
     color: colors.onBackground,
-    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
-    ...typography.bodyMd,
-    color: colors.onSurfaceVariant,
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
+    color: colors.secondary,
   },
   formContainer: {
     width: '100%',
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#E8F5E9',
     padding: spacing.md,
-    borderRadius: radius.card,
+    borderRadius: radius.md,
     marginBottom: spacing.lg,
     borderWidth: 1,
     borderColor: '#2E7D32',
@@ -292,26 +292,25 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   successTitle: {
-    ...typography.headlineMd,
+    fontFamily: typography.headlineMd.fontFamily,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: '#2E7D32',
-    marginBottom: spacing.xs,
     marginBottom: spacing.sm,
   },
   successDescription: {
-    ...typography.bodyMd,
+    fontFamily: typography.bodyMd.fontFamily,
     fontSize: 13,
-    color: '#2E7D32',
+    color: colors.secondary,
     lineHeight: 18,
   },
   inputWrapper: {
     marginBottom: spacing.lg,
   },
   inputLabel: {
-    ...typography.labelMd,
+    fontFamily: typography.labelMd.fontFamily,
+    fontSize: typography.labelMd.fontSize,
     color: colors.onBackground,
-    fontWeight: '600',
     marginBottom: spacing.xs,
     marginLeft: spacing.xs,
   },
@@ -321,13 +320,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.input,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     height: 56,
   },
   inputFocused: {
-    borderColor: colors.secondary,
-    borderWidth: 1.5,
+    borderColor: colors.primary,
+    borderWidth: 2,
   },
   inputIcon: {
     marginRight: spacing.sm,
@@ -335,7 +334,8 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     color: colors.onBackground,
-    ...typography.bodyMd,
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
     height: '100%',
   },
   iconButton: {
@@ -357,25 +357,19 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   strengthLabelText: {
-    ...typography.labelSm,
+    fontFamily: typography.labelSm.fontFamily,
     fontSize: 12,
-    marginTop: spacing.xs,
     marginTop: spacing.sm,
     fontWeight: '500',
   },
   errorLabelText: {
-    ...typography.labelSm,
+    fontFamily: typography.labelSm.fontFamily,
     fontSize: 12,
     color: colors.error,
     marginTop: spacing.xs,
     marginLeft: spacing.sm,
   },
   primaryButton: {
-    borderRadius: radius.button,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
     backgroundColor: colors.primary,
     borderRadius: radius.full,
     height: 56,
@@ -387,12 +381,15 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.5,
   },
+  buttonSuccess: {
+    backgroundColor: '#2E7D32',
+  },
   primaryButtonText: {
+    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.onPrimary,
   },
 });
 
 export default ResetPasswordScreen;
-

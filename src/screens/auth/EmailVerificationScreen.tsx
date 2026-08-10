@@ -11,20 +11,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-
+import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
-import { getAuth, sendEmailVerification } from '@react-native-firebase/auth';
+
 interface EmailVerificationScreenProps {
   navigation: any;
 }
 
 export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ navigation }) => {
-  
+  const { sendVerification } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimeLeft, setResendTimeLeft] = useState(0);
 
@@ -32,12 +31,9 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
     if (resendTimeLeft > 0) return;
     setIsLoading(true);
     try {
-      const currentUser = getAuth().currentUser;
-      if (!currentUser) {
-        throw new Error('No signed-in user found.');
-      }
-      await sendEmailVerification(currentUser);
+      await sendVerification();
       setResendTimeLeft(60);
+      // Start cooldown timer
       const interval = setInterval(() => {
         setResendTimeLeft((prev) => {
           if (prev <= 1) {
@@ -86,14 +82,9 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
 
           {/* Illustration Container */}
           <View style={styles.illustrationWrapper}>
-            <LinearGradient
-              colors={[colors.secondaryContainer, colors.tertiaryContainer]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.illustrationBg}
-            >
-              <MaterialCommunityIcons name="email-check-outline" size={64} color={colors.secondary} />
-            </LinearGradient>
+            <View style={styles.illustrationBg}>
+              <MaterialCommunityIcons name="email-check-outline" size={64} color={colors.primary} />
+            </View>
           </View>
 
           {/* Informational Message */}
@@ -108,9 +99,9 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
           <View style={styles.actionContainer}>
             {/* Continue Button */}
             <TouchableOpacity 
+              style={styles.primaryButton} 
               onPress={handleContinue}
               activeOpacity={0.8}
-              style={[styles.primaryButton, { backgroundColor: colors.secondary }]}
             >
               <Text style={styles.primaryButtonText}>Continue</Text>
             </TouchableOpacity>
@@ -159,14 +150,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   welcomeTitle: {
-    ...typography.headlineLgMobile,
+    fontFamily: typography.headlineLgMobile.fontFamily,
+    fontSize: typography.headlineLgMobile.fontSize,
+    fontWeight: typography.headlineLgMobile.fontWeight,
     color: colors.onBackground,
-    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   subtitle: {
-    ...typography.bodyMd,
-    color: colors.onSurfaceVariant,
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: typography.bodyMd.fontSize,
+    color: colors.secondary,
   },
   illustrationWrapper: {
     alignItems: 'center',
@@ -176,9 +169,9 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
+    backgroundColor: colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.level2,
     ...shadows.level1,
   },
   messageContainer: {
@@ -186,7 +179,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   messageBody: {
-    ...typography.bodyMd,
+    fontFamily: typography.bodyMd.fontFamily,
+    fontSize: 14,
     color: colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
@@ -196,11 +190,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   primaryButton: {
-    borderRadius: radius.button,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
     backgroundColor: colors.primary,
     borderRadius: radius.full,
     height: 56,
@@ -209,15 +198,15 @@ const styles = StyleSheet.create({
     ...shadows.level2,
   },
   primaryButtonText: {
+    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.onPrimary,
   },
   secondaryButton: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.outlineVariant,
-    borderRadius: radius.button,
     borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
@@ -225,10 +214,10 @@ const styles = StyleSheet.create({
     ...shadows.level1,
   },
   secondaryButtonText: {
-    ...typography.labelMd,
-    fontWeight: '700',
+    fontFamily: typography.labelMd.fontFamily,
     fontSize: 16,
-    color: colors.secondary,
+    fontWeight: '600',
+    color: colors.primary,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -236,4 +225,3 @@ const styles = StyleSheet.create({
 });
 
 export default EmailVerificationScreen;
-

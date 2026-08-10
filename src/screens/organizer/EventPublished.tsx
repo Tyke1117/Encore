@@ -11,9 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '../../context/ThemeContext';
-import { ColorsType } from '../../theme/colors';
+import { colors } from '../../theme/colors';
 import { typography } from '../../theme/fonts';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
@@ -25,9 +23,6 @@ interface EventPublishedProps {
 }
 
 export default function EventPublished({ route, navigation }: EventPublishedProps) {
-  const { colors, isDark } = useTheme();
-  const styles = getStyles(colors);
-
   const { eventData } = route.params || {};
 
  const handleClose = () => {
@@ -45,8 +40,8 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
       {/* Top Close Button */}
       <View style={styles.topBar}>
@@ -58,26 +53,21 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Success Icon */}
         <View style={styles.successIconContainer}>
-          <LinearGradient
-            colors={[colors.secondaryContainer, colors.tertiaryContainer]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.successIconOuter}
-          >
-            <View style={[styles.successIconInner, { backgroundColor: colors.surface }]}>
+          <View style={styles.successIconOuter}>
+            <View style={styles.successIconInner}>
               <Icon name="check" size={32} color={colors.secondary} />
             </View>
-          </LinearGradient>
+          </View>
         </View>
 
         {/* Success Header */}
         <Text style={styles.successTitle}>Your event is live!</Text>
         <Text style={styles.successSub}>
-          High-fives all around. Your event has been published and is now accepting registrations.
+          High-fives all around. Your corporate gala has been published and is now accepting registrations.
         </Text>
 
         {/* Event Card */}
-        <View style={styles.eventCard}>
+        <View style={[styles.eventCard, shadows.level2]}>
           <View style={styles.cardImageContainer}>
             <Image
               source={{
@@ -87,45 +77,52 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
               }}
               style={styles.cardImage}
             />
+            {/* Confirmed tag */}
             <View style={styles.confirmedBadge}>
-              <Text style={styles.confirmedBadgeText}>Public Event</Text>
+              <Text style={styles.confirmedBadgeText}>CONFIRMED</Text>
             </View>
           </View>
 
           <View style={styles.cardBody}>
+            {/* Date & Time */}
             <View style={styles.dateRow}>
+              <Icon name="calendar" size={14} color={colors.primaryContainer} style={{ marginRight: 6 }} />
               <Text style={styles.dateText}>
-                {eventData?.startDate || '24 Oct 2024'} at {eventData?.startTime || '19:00'}
+                {eventData?.startDate ? eventData.startDate.toUpperCase() : 'OCTOBER 24, 2024'} -{' '}
+                {eventData?.startTime || '6:00 PM'}
               </Text>
             </View>
-            <Text style={styles.eventTitle}>{eventData?.title || 'Global Innovation Summit 2024'}</Text>
+
+            {/* Event Title */}
+            <Text style={styles.eventTitle}>{eventData?.title || 'Future of Fintech: Global Leadership Summit'}</Text>
+
+            {/* Location */}
             <View style={styles.locationRow}>
-              <Icon
-                name="map-pin"
-                size={14}
-                color={colors.onSurfaceVariant}
-                style={{ marginRight: 6 }}
-              />
-              <Text style={styles.locationText}>{eventData?.venue || 'Digital Art Pavilion'}</Text>
+              <Icon name="map-pin" size={14} color={colors.onSurfaceVariant} style={{ marginRight: 6 }} />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {eventData?.isVirtual ? 'Virtual Event' : eventData?.venue || 'The Grand Meridian, New York'}
+              </Text>
             </View>
 
+            {/* Bottom row of card: Attendees and Privacy Tag */}
             <View style={styles.cardFooterRow}>
+              {/* Attendee Avatars */}
               <View style={styles.avatarsContainer}>
-                {mockAvatars.map((uri, index) => (
+                {mockAvatars.map((url, idx) => (
                   <Image
-                    key={index}
-                    source={{ uri }}
-                    style={[styles.avatarImage, { zIndex: 3 - index, marginLeft: index === 0 ? 0 : -8 }]}
+                    key={idx}
+                    source={{ uri: url }}
+                    style={[styles.avatarImage, { marginLeft: idx > 0 ? -10 : 0 }]}
                   />
                 ))}
-                <View style={[styles.avatarCountBadge, { marginLeft: -8, zIndex: 0 }]}>
-                  <Text style={styles.avatarCountText}>+48</Text>
+                <View style={[styles.avatarCountBadge, { marginLeft: -10 }]}>
+                  <Text style={styles.avatarCountText}>+12</Text>
                 </View>
               </View>
+
+              {/* Public Tag */}
               <View style={styles.publicBadge}>
-                <Text style={styles.publicBadgeText}>
-                  {eventData?.ticketType ? eventData.ticketType.toUpperCase() : 'FREE'}
-                </Text>
+                <Text style={styles.publicBadgeText}>Public Event</Text>
               </View>
             </View>
           </View>
@@ -134,17 +131,13 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
         {/* Action Buttons */}
         <View style={styles.actionsContainer}>
           {/* Invite Participants Button */}
-          <TouchableOpacity
-            onPress={() => Alert.alert('Invites', 'Invitations sent successfully!')}
-            activeOpacity={0.8}
-            style={[styles.inviteButtonTouch, styles.inviteButton, { backgroundColor: colors.secondary, flexDirection: 'row' }, shadows.level1]}
-          >
-            <Icon name="user-plus" size={18} color="#ffffff" style={{ marginRight: 8 }} />
+          <TouchableOpacity style={[styles.inviteButton, shadows.level1]}>
+            <Icon name="user-plus" size={18} color={colors.onPrimary} style={{ marginRight: 8 }} />
             <Text style={styles.inviteButtonText}>Invite Participants</Text>
           </TouchableOpacity>
 
           {/* Share Link Button */}
-          <TouchableOpacity style={styles.shareButton} onPress={handleCopyLink}>
+          <TouchableOpacity style={styles.shareButton}>
             <Icon name="share-2" size={18} color={colors.onSurface} style={{ marginRight: 8 }} />
             <Text style={styles.shareButtonText}>Share Link</Text>
           </TouchableOpacity>
@@ -159,13 +152,10 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
         <View style={styles.copyBox}>
           <Icon name="globe" size={16} color={colors.onSurfaceVariant} style={{ marginRight: spacing.sm }} />
           <Text style={styles.copyBoxText} numberOfLines={1}>
-            encore.events/
-            {eventData?.title
-              ? eventData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-              : 'fintech-summit-24'}
+            encore.events/{eventData?.title ? eventData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'fintech-summit-24'}
           </Text>
           <TouchableOpacity style={styles.copyIconButton} onPress={handleCopyLink}>
-            <Icon name="copy" size={16} color={colors.secondary} />
+            <Icon name="copy" size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -176,9 +166,10 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
   );
 }
 
-const getStyles = (colors: ColorsType) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   topBar: {
     height: 56,
@@ -195,7 +186,7 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing['2xl'],
     alignItems: 'center',
   },
   successIconContainer: {
@@ -205,6 +196,7 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
+    backgroundColor: 'rgba(113, 42, 226, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -212,15 +204,15 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
+    backgroundColor: 'rgba(113, 42, 226, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   successTitle: {
-    ...typography.headlineLg,
+    ...typography.display,
     fontSize: 28,
     textAlign: 'center',
     color: colors.onSurface,
-    fontWeight: '700',
     marginBottom: spacing.sm,
   },
   successSub: {
@@ -232,9 +224,9 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
   },
   eventCard: {
     width: '100%',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.slate[200],
     borderRadius: radius.card,
     overflow: 'hidden',
     marginBottom: spacing.xl,
@@ -252,18 +244,16 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     position: 'absolute',
     top: 12,
     left: 12,
-    backgroundColor: colors.secondaryContainer,
+    backgroundColor: colors.primaryContainer,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: 4,
-    borderWidth: 1,
-    borderColor: colors.secondary,
   },
   confirmedBadgeText: {
     ...typography.labelSm,
     fontSize: 9,
     fontWeight: '700',
-    color: colors.secondary,
+    color: colors.onPrimary,
   },
   cardBody: {
     padding: spacing.lg,
@@ -276,7 +266,7 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
   dateText: {
     ...typography.labelMd,
     fontWeight: '700',
-    color: colors.secondary,
+    color: colors.primary,
   },
   eventTitle: {
     ...typography.headlineMd,
@@ -300,7 +290,7 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: colors.outlineVariant,
+    borderTopColor: colors.slate[100],
     paddingTop: spacing.md,
   },
   avatarsContainer: {
@@ -312,66 +302,64 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 1.5,
+    borderColor: colors.surfaceContainerLowest,
   },
   avatarCountBadge: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.slate[200],
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: colors.surface,
+    borderColor: colors.surfaceContainerLowest,
   },
   avatarCountText: {
     ...typography.labelSm,
     fontSize: 8,
     fontWeight: '700',
-    color: colors.onSurface,
+    color: colors.slate[800],
   },
   publicBadge: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: colors.slate[100],
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: radius.chip,
-    borderWidth: 1,
-    borderColor: colors.outlineVariant,
   },
   publicBadgeText: {
     ...typography.labelSm,
     fontSize: 9,
     fontWeight: '600',
-    color: colors.onSurface,
+    color: colors.slate[800],
   },
   actionsContainer: {
     width: '100%',
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
-  inviteButtonTouch: {
-    width: '100%',
-    marginBottom: spacing.sm,
-  },
   inviteButton: {
     width: '100%',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.primary,
     paddingVertical: spacing.md,
     borderRadius: radius.button,
+    marginBottom: spacing.sm,
   },
   inviteButtonText: {
     ...typography.bodyLg,
-    color: '#ffffff',
-    fontWeight: '700',
+    color: colors.onPrimary,
+    fontWeight: '600',
   },
   shareButton: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceContainerLowest,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.slate[200],
     paddingVertical: spacing.md,
     borderRadius: radius.button,
     marginBottom: spacing.lg,
@@ -379,15 +367,15 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
   shareButtonText: {
     ...typography.bodyLg,
     color: colors.onSurface,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   dashboardLink: {
     paddingVertical: spacing.xs,
   },
   dashboardLinkText: {
     ...typography.bodyMd,
-    color: colors.secondary,
-    fontWeight: '700',
+    color: colors.primary,
+    fontWeight: '600',
     textDecorationLine: 'underline',
   },
   copyBox: {
@@ -396,11 +384,11 @@ const getStyles = (colors: ColorsType) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceContainerLow,
     borderWidth: 1,
-    borderColor: colors.outlineVariant,
+    borderColor: colors.slate[200],
     borderRadius: radius.md,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.xl,
+    marginBottom: spacing['2xl'],
   },
   copyBoxText: {
     ...typography.bodyMd,
