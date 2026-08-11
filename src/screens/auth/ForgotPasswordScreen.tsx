@@ -8,10 +8,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  SafeAreaView,
   StatusBar,
   Alert
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAuth, sendPasswordResetEmail } from '@react-native-firebase/auth';
@@ -208,7 +208,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.level2,
-    ...shadows.level1,
   },
   formContainer: {
     width: '100%',
@@ -233,7 +232,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2E7D32',
     marginBottom: spacing.xs,
-    marginBottom: spacing.sm,
   },
   successDescription: {
     ...typography.bodyMd,
@@ -280,11 +278,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
     ...shadows.level2,
   },
   buttonDisabled: {

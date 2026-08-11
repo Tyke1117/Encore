@@ -8,9 +8,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -297,7 +297,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#2E7D32',
     marginBottom: spacing.xs,
-    marginBottom: spacing.sm,
   },
   successDescription: {
     ...typography.bodyMd,
@@ -360,7 +359,6 @@ const styles = StyleSheet.create({
     ...typography.labelSm,
     fontSize: 12,
     marginTop: spacing.xs,
-    marginTop: spacing.sm,
     fontWeight: '500',
   },
   errorLabelText: {
@@ -376,12 +374,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.md,
     ...shadows.level2,
   },
   buttonDisabled: {

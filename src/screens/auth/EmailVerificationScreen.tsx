@@ -7,9 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  SafeAreaView,
   StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -179,7 +179,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.level2,
-    ...shadows.level1,
   },
   messageContainer: {
     paddingHorizontal: spacing.md,
@@ -201,11 +200,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
     ...shadows.level2,
   },
   primaryButtonText: {
@@ -218,7 +212,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.outlineVariant,
     borderRadius: radius.button,
-    borderRadius: radius.full,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
