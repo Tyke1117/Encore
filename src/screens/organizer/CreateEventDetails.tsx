@@ -6,10 +6,10 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../../context/ThemeContext';
 import { ColorsType } from '../../theme/colors';
@@ -17,6 +17,7 @@ import { typography } from '../../theme/fonts';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { shadows } from '../../theme/shadows';
+
 
 interface CreateEventDetailsProps {
   navigation: any;
@@ -74,7 +75,7 @@ export default function CreateEventDetails({ navigation }: CreateEventDetailsPro
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Top Control Bar */}
         <View style={styles.topControlRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('OrganizerDashboard')}>
+         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('OrganizerTabs', { screen: 'OrganizerDashboard' })}>
             <Icon name="x" size={22} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>

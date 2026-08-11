@@ -6,8 +6,8 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
-
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { AuthProvider } from './src/context/AuthContext';
 
 // Import Auth Screens
 import SplashScreen from './src/screens/auth/SplashScreen';
@@ -22,10 +22,18 @@ import { PrivacyPolicyScreen } from './src/screens/auth/PrivacyPolicyScreen';
 
 // Import Organizer / Event Screens
 import OrganizerDashboard from './src/screens/organizer/OrganizerDashboard';
+import OrganizerTabs from './src/navigation/OrganizerTabs';
 import CreateEventDetails from './src/screens/organizer/CreateEventDetails';
 import CreateEventTimeLocation from './src/screens/organizer/CreateEventTimeLocation';
 import CreateEventTickets from './src/screens/organizer/CreateEventTickets';
 import EventPublished from './src/screens/organizer/EventPublished';
+import EditEventScreen from './src/screens/organizer/EditEventScreen';
+
+import HomeScreen from './src/screens/home/HomeScreen';
+import SearchScreen from './src/screens/search/SearchScreen';
+import CategoriesScreen from './src/screens/categories/CategoriesScreen';
+import FavoritesScreen from './src/screens/favorites/FavoritesScreen';
+import AnnouncementScreen from './src/screens/announcements/AnnouncementScreen';
 
 // Import Core Tab & Settings Screens
 import HomeScreen from './src/screens/home/HomeScreen';
@@ -111,8 +119,8 @@ function AppDrawer() {
 
 export default function App() {
   return (
-    
-      <ThemeProvider>
+    <ThemeProvider>
+      <AuthProvider>
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName="Splash"
@@ -121,7 +129,9 @@ export default function App() {
               animation: 'slide_from_right',
             }}
           >
-            {/* Splash Intro */}
+            {/* Splash Intro — now also checks Firebase's restored
+                session and routes straight to AppDrawer if the user
+                is already logged in, instead of always going to Login. */}
             <Stack.Screen name="Splash" component={SplashScreen} />
 
             {/* Auth Screens */}
@@ -143,7 +153,70 @@ export default function App() {
             <Stack.Screen name="EventPublished" component={EventPublished} />
           </Stack.Navigator>
         </NavigationContainer>
-      </ThemeProvider>
-    
+      </AuthProvider>
+    </ThemeProvider>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="OrganizerTabs"
+        screenOptions={{
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen
+          name="OrganizerTabs"
+          component={OrganizerTabs}
+        />
+        <Stack.Screen
+          name="CreateEventDetails"
+          component={CreateEventDetails}
+        />
+        <Stack.Screen
+          name="CreateEventTimeLocation"
+          component={CreateEventTimeLocation}
+        />
+        <Stack.Screen
+          name="CreateEventTickets"
+          component={CreateEventTickets}
+        />
+        <Stack.Screen
+          name="EventPublished"
+          component={EventPublished}
+        />
+        <Stack.Screen
+          name="EditEventScreen"
+          component={EditEventScreen}
+        />
+
+        {/* Home-side screens (student view) — registered here as plain
+            stack routes for now so they stay reachable via
+            navigation.navigate('HomeScreen') etc. The previous dev-only
+            useState screen switcher was removed because it bypassed
+            React Navigation entirely, which breaks passing data via
+            route.params (used by EditEventScreen and others). Whoever
+            owns the student-side flow may want to nest these in their
+            own tab navigator later, similar to OrganizerTabs. */}
+        <Stack.Screen
+          name="HomeScreen"
+          component={HomeScreen}
+        />
+        <Stack.Screen
+          name="SearchScreen"
+          component={SearchScreen}
+        />
+        <Stack.Screen
+          name="CategoriesScreen"
+          component={CategoriesScreen}
+        />
+        <Stack.Screen
+          name="FavoritesScreen"
+          component={FavoritesScreen}
+        />
+        <Stack.Screen
+          name="AnnouncementScreen"
+          component={AnnouncementScreen}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }

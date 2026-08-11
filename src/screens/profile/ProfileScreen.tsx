@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
@@ -21,16 +22,40 @@ import { shadows } from '../../theme/shadows';
 
 export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
+  const { user, logout } = useAuth();
 
-  const [name, setName] = useState('User');
-  const [email, setEmail] = useState('user@encore.edu');
+  const [name, setName] = useState(user?.name || 'User');
+  const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('+1 (555) 019-2834');
   const [bio, setBio] = useState('Lead Student Coordinator & Event Organizer. Passionate about bringing creative students together.');
   const [isEditing, setIsEditing] = useState(false);
 
+  // Sync local editable fields whenever the real logged-in user data
+  // changes (e.g. right after Firebase restores the session).
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email || '');
+    }
+  }, [user]);
+
   const handleSave = () => {
     setIsEditing(false);
     Alert.alert('Profile Saved', 'Your profile details have been updated successfully.');
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          navigation.replace('Login');
+        },
+      },
+    ]);
   };
 
   return (
@@ -64,11 +89,18 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           />
           <View style={styles.profileAvatarWrapper}>
             <View style={[styles.avatarOutline, { borderColor: colors.surface }]}>
-              <LinearGradient
-                colors={[colors.secondaryContainer, colors.tertiaryContainer]}
-                style={styles.avatarGradient}
-              >
-              </LinearGradient>
+              {user?.photoURL ? (
+                <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
+              ) : (
+                <LinearGradient
+                  colors={[colors.secondaryContainer, colors.tertiaryContainer]}
+                  style={styles.avatarGradient}
+                >
+                  <Text style={[styles.avatarInitials, { color: colors.onSecondaryContainer }]}>
+                    {name.charAt(0).toUpperCase()}
+                  </Text>
+                </LinearGradient>
+              )}
             </View>
             <TouchableOpacity style={[styles.changeAvatarBtn, { backgroundColor: colors.secondary }]}>
               <Ionicons name="camera" size={16} color="#ffffff" />
@@ -77,6 +109,11 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
           <Text style={[styles.profileName, { color: colors.onSurface }]}>{name}</Text>
           <Text style={[styles.profileRole, { color: colors.onSurfaceVariant }]}>Event Organizer</Text>
+          {user?.emailVerified === false && (
+            <View style={[styles.unverifiedBadge, { backgroundColor: colors.errorContainer }]}>
+              <Text style={[styles.unverifiedText, { color: colors.onErrorContainer }]}>Email not verified</Text>
+            </View>
+          )}
         </View>
 
         {/* Inputs / Fields */}
@@ -103,23 +140,20 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             </View>
           </View>
 
-          {/* Email Address */}
+          {/* Email Address — read-only, comes from Firebase auth */}
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.onSurface }]}>Email Address</Text>
             <View style={[
               styles.inputBox, 
               { backgroundColor: colors.surface, borderColor: colors.outlineVariant },
-              !isEditing && styles.readOnlyInput
+              styles.readOnlyInput,
             ]}>
               <Ionicons name="mail-outline" size={18} color={colors.onSurfaceVariant} style={styles.fieldIcon} />
               <TextInput
                 style={[styles.textInput, { color: colors.onSurface }]}
                 value={email}
-                onChangeText={setEmail}
-                editable={isEditing}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                placeholder="Enter your email"
+                editable={false}
+                placeholder="Email"
                 placeholderTextColor={colors.outline}
               />
             </View>
@@ -168,6 +202,23 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               />
             </View>
           </View>
+
+          {/* UID — useful for debugging/support, read-only */}
+          {user?.uid && (
+            <View style={styles.formGroup}>
+              <Text style={[styles.fieldLabel, { color: colors.onSurface }]}>User ID</Text>
+              <View style={[
+                styles.inputBox,
+                { backgroundColor: colors.surface, borderColor: colors.outlineVariant },
+                styles.readOnlyInput,
+              ]}>
+                <Ionicons name="finger-print-outline" size={18} color={colors.onSurfaceVariant} style={styles.fieldIcon} />
+                <Text style={[styles.textInput, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+                  {user.uid}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {isEditing && (
@@ -179,10 +230,41 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
             <Text style={styles.saveBtnText}>Save Changes</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity
+          onPress={handleLogout}
+          activeOpacity={0.8}
+          style={[styles.logoutBtn, { borderColor: colors.error }]}
+        >
+          <Ionicons name="log-out-outline" size={18} color={colors.error} style={{ marginRight: spacing.xs }} />
+          <Text style={[styles.logoutBtnText, { color: colors.error }]}>Log Out</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/Feather';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/fonts';
+import { spacing } from '../../theme/spacing';
+
+// Placeholder screen — full profile UI to be built separately.
+export default function ProfileScreen() {
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.iconCircle}>
+          <Icon name="user" size={28} color={colors.primary} />
+        </View>
+        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.subtitle}>Coming soon</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -251,6 +333,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
   avatarInitials: {
     fontSize: 32,
     fontWeight: '700',
@@ -275,6 +361,16 @@ const styles = StyleSheet.create({
   profileRole: {
     ...typography.labelMd,
     marginTop: 2,
+  },
+  unverifiedBadge: {
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.chip,
+  },
+  unverifiedText: {
+    ...typography.labelSm,
+    fontWeight: '600',
   },
   sectionTitle: {
     ...typography.labelSm,
@@ -333,12 +429,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    marginBottom: spacing.md,
   },
   saveBtnText: {
     ...typography.bodyLg,
     color: '#ffffff',
     fontWeight: '700',
   },
+  logoutBtn: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 52,
+    borderRadius: radius.button,
+    borderWidth: 1.5,
+    width: '100%',
+  },
+  logoutBtnText: {
+    ...typography.bodyLg,
+    fontWeight: '700',
+  },
 });
 
 export default ProfileScreen;
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primaryFixed,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  title: {
+    ...typography.headlineMd,
+    color: colors.onSurface,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
+  },
+});
