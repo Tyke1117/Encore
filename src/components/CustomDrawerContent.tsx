@@ -13,13 +13,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps){
   const { navigation } = props ;
-  // const { currentUser, logout, setRole } = useAuth();
+  const { user, logout } = useAuth();
   const { colors } = useTheme();
 
   const state = props.state;
@@ -34,14 +35,15 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
 
   const handleLogout = async () => {
     try {
-      navigation.replace('Login')
+      await logout();
+      (navigation as any).replace('Login');
     } catch (e) {
       console.error(e);
     }
   };
 
-  const name = 'User';
-  const email =  'user@encore.edu';
+  const name = user?.name || 'User';
+  const email = user?.email || 'No email';
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -94,9 +96,6 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
           <TouchableOpacity 
             style={[styles.roleSwitchBtn, { backgroundColor: colors.secondaryContainer }]}
             onPress={() => {
-              // const targetRole = currentUser?.role === 'organizer' ? 'attendee' : 'organizer';
-              // setRole(targetRole);
-              // Navigate Home to make sure the tab views refresh
               props.navigation.navigate('AppTabs', { screen: 'Home' });
             }}
             activeOpacity={0.8}
