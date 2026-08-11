@@ -41,19 +41,12 @@ const Tab = createBottomTabNavigator();
 
 import { getAuth } from '@react-native-firebase/auth';
 
-function AppTabs() {
+function AppTabs({ isOrganizer }: { isOrganizer: boolean }) {
   const { colors } = useTheme();
-  const [isOrganizer, setIsOrganizer] = React.useState(false);
-
-  React.useEffect(() => {
-    const user = getAuth().currentUser;
-    // if you store role as a custom claim or in Firestore, fetch it here instead
-    // for now, defaulting to false (attendee) until you wire up role storage
-    setIsOrganizer(false);
-  }, []);
 
   return (
-    <Tab.Navigator      screenOptions={({ route }) => ({
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
           if (route.name === 'Home') {
@@ -73,14 +66,13 @@ function AppTabs() {
           backgroundColor: colors.surface,
           borderTopColor: colors.outlineVariant,
           height: 100,
-          // marginBottom: 60,
           paddingTop: 8,
         },
         headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={isOrganizer ? OrganizerDashboard : HomeScreen} />
-  <Tab.Screen name="AI" component={AIScreen} />
+      <Tab.Screen name="AI" component={AIScreen} />
       <Tab.Screen name="Notifications" component={NotificationScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
@@ -89,20 +81,22 @@ function AppTabs() {
 
 function AppDrawer() {
   const { colors } = useTheme();
+  const [isOrganizer, setIsOrganizer] = React.useState(false);
 
   return (
     <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      drawerContent={(props) => (
+        <CustomDrawerContent {...props} isOrganizer={isOrganizer} setIsOrganizer={setIsOrganizer} />
+      )}
       screenOptions={{
         headerShown: false,
         drawerType: 'slide',
-        drawerStyle: {
-          width: 280,
-          backgroundColor: colors.background,
-        },
+        drawerStyle: { width: 280, backgroundColor: colors.background },
       }}
     >
-      <Drawer.Screen name="AppTabs" component={AppTabs} />
+      <Drawer.Screen name="AppTabs">
+        {(props) => <AppTabs {...props} isOrganizer={isOrganizer} />}
+      </Drawer.Screen>
       <Drawer.Screen name="Settings" component={SettingsScreen} />
       <Drawer.Screen name="ProfileScreen" component={ProfileScreen} />
     </Drawer.Navigator>
