@@ -5,11 +5,11 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
   StatusBar,
   Image,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
@@ -30,9 +30,9 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
 
   const { eventData } = route.params || {};
 
- const handleClose = () => {
-  navigation.navigate('OrganizerTabs', { screen: 'OrganizerDashboard' });
-};
+  const handleClose = () => {
+    navigation.navigate('OrganizerDashboard');
+  };
 
   const handleCopyLink = () => {
     Alert.alert('Success', 'Event link copied to clipboard!');

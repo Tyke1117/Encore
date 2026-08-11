@@ -13,14 +13,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps){
   const { navigation } = props ;
-  const { user, logout } = useAuth();
+  // const { currentUser, logout, setRole } = useAuth();
   const { colors } = useTheme();
 
   const state = props.state;
@@ -33,16 +32,16 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
     activeTabName = (activeRoute.state.routeNames && activeRoute.state.routeNames[nestedIndex]) || 'Home';
   }
 
- const handleLogout = async () => {
+  const handleLogout = async () => {
     try {
-      await logout();
-      (navigation as any).replace('Login');
+      navigation.replace('Login')
     } catch (e) {
       console.error(e);
     }
   };
-  const name = user?.name || 'User';
-  const email = user?.email || 'No email';
+
+  const name = 'User';
+  const email =  'user@encore.edu';
   const initials = name
     .split(' ')
     .map((n) => n[0])

@@ -8,11 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  SafeAreaView,
   StatusBar,
   Pressable,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -52,16 +52,47 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password) return;
-    setIsLoading(true);
-    try {
-      await login(email, password);
-     navigation?.navigate('OrganizerTabs', { screen: 'OrganizerDashboard' });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+  const [selectedRole, setSelectedRole] = useState<'attendee' | 'organizer'>('attendee');
+
+  // Configure Google Sign-In once on mount, not on every render
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: false,
+    });
+  }, []);
+
+  
+const handleLogin = async () => {
+  const userEmail = email.trim().toLowerCase();
+
+  if (!userEmail || !password) {
+    Alert.alert("Error", "Please enter email and password.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    await signInWithEmailAndPassword(getAuth(), userEmail, password);
+    navigation.replace("AppDrawer");
+  } catch (error: any) {
+    switch (error.code) {
+      case "auth/user-not-found":
+        Alert.alert("No Account", "No account found with this email.");
+        break;
+
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        Alert.alert("Login Failed", "Incorrect email or password.");
+        break;
+
+      case "auth/invalid-email":
+        Alert.alert("Invalid Email");
+        break;
+
+      default:
+        Alert.alert("Login Failed", error.message);
     }
   } finally {
     setIsLoading(false);
@@ -318,34 +349,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
     ...shadows.level2,
-    ...shadows.level1,
-  },
-  welcomeTitle: {
-    fontFamily: typography.headlineLgMobile.fontFamily,
-    fontSize: typography.headlineLgMobile.fontSize,
-    fontWeight: typography.headlineLgMobile.fontWeight,
-    color: colors.onBackground,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
-    color: colors.secondary,
-    textAlign: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  formContainer: {
-    width: '100%',
-  },
-  inputWrapper: {
-    marginBottom: spacing.md,
-  },
-  inputLabel: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: typography.labelMd.fontSize,
-    color: colors.onBackground,
-    marginBottom: spacing.xs,
-    marginLeft: spacing.xs,
   },
   welcomeTitle: { ...typography.headlineLgMobile, color: colors.onBackground, fontWeight: '700', marginBottom: spacing.xs },
   subtitle: { ...typography.bodyMd, color: colors.onSurfaceVariant, textAlign: 'center', paddingHorizontal: spacing.md },
@@ -377,83 +380,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.outlineVariant },
   dividerText: { ...typography.bodyMd, fontSize: 12, color: colors.onSurfaceVariant, paddingHorizontal: spacing.md },
   socialRow: { flexDirection: 'row', gap: spacing.md },
-  inputFocused: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  inputIcon: {
-    marginRight: spacing.sm,
-  },
-  textInput: {
-    flex: 1,
-    color: colors.onBackground,
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: typography.bodyMd.fontSize,
-    height: '100%',
-  },
-  iconButton: {
-    padding: spacing.xs,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-    marginBottom: spacing.lg,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkboxLabel: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 14,
-    color: colors.onBackground,
-    marginLeft: spacing.xs,
-  },
-  forgotPasswordLink: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.full,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...shadows.level2,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  primaryButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.onPrimary,
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.outlineVariant,
-  },
-  dividerText: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 12,
-    color: colors.secondary,
-    paddingHorizontal: spacing.md,
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
   socialButton: {
     flex: 1,
     flexDirection: 'row',
@@ -466,34 +392,6 @@ const styles = StyleSheet.create({
     height: 56,
     gap: spacing.sm,
     ...shadows.level1,
-    borderRadius: radius.full,
-    height: 56,
-    gap: spacing.sm,
-    ...shadows.level1,
-  },
-  socialButtonText: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.onBackground,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  footerText: {
-    fontFamily: typography.bodyMd.fontFamily,
-    fontSize: 14,
-    color: colors.secondary,
-  },
-  footerLink: {
-    fontFamily: typography.labelMd.fontFamily,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.primary,
   },
   socialButtonText: { ...typography.labelMd, fontWeight: '600', color: colors.onBackground },
   footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: spacing.xl, paddingBottom: spacing.md },
