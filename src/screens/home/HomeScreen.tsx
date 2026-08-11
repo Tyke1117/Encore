@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -10,6 +10,7 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +20,8 @@ import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
+import SkeletonLoader from '../../components/SkeletonLoader';
+
 
 const { width } = Dimensions.get('window');
 
@@ -92,12 +95,76 @@ const eventsList: EventItem[] = [
   },
 ];
 
+const AnimatedEventCard: React.FC<{
+  event: EventItem;
+  onPress: () => void;
+  colors: any;
+  shadows: any;
+  index: number;
+}> = ({ event, onPress, colors, shadows, index }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        delay: index * 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        delay: index * 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [index, event.id]);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: '100%' }}>
+      <TouchableOpacity
+        style={[styles.popularCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }, shadows.level1]}
+        activeOpacity={0.8}
+        onPress={onPress}
+      >
+        <View style={[styles.popularIconBox, { backgroundColor: `${colors.secondary}12` }]}>
+          <Ionicons name={event.imageIcon as any} size={22} color={colors.secondary} />
+        </View>
+        <View style={styles.popularInfo}>
+          <Text style={[styles.popularName, { color: colors.onSurface }]}>{event.name}</Text>
+          <Text style={[styles.popularMeta, { color: colors.onSurfaceVariant }]}>{event.date} · {event.venue}</Text>
+          <Text style={[styles.popularPrice, { color: colors.tertiary }]}>{event.price}</Text>
+        </View>
+        <TouchableOpacity 
+          onPress={onPress} 
+          activeOpacity={0.8}
+          style={[styles.bookActionBtn, { backgroundColor: colors.secondary }]}
+        >
+          <Text style={styles.bookActionText}>Book</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
   // const { currentUser } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isFeedLoading, setIsFeedLoading] = useState(false);
+
+  const handleCategorySelect = (categoryKey: string) => {
+    setIsFeedLoading(true);
+    setTimeout(() => {
+      setSelectedCategory(categoryKey);
+      setIsFeedLoading(false);
+    }, 600);
+  };
+
 
   const categories = [
     { key: 'all', label: 'All Events', icon: 'grid-outline' },
@@ -192,7 +259,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     { backgroundColor: colors.surface, borderColor: colors.outlineVariant },
                     isSelected && { backgroundColor: colors.secondaryContainer, borderColor: colors.secondary },
                   ]}
-                  onPress={() => setSelectedCategory(cat.key)}
+                  onPress={() => handleCategorySelect(cat.key)}
                 >
                   <Ionicons name={cat.icon as any} size={16} color={isSelected ? colors.secondary : colors.onSurfaceVariant} />
                   <Text style={[
@@ -258,31 +325,25 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           {searchQuery || selectedCategory !== 'all' ? 'Search Results' : 'Popular Events'}
         </Text>
         <View style={styles.popularContainer}>
-          {filteredEvents.map((event) => (
-            <TouchableOpacity
-              key={event.id}
-              style={[styles.popularCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }, shadows.level1]}
-              activeOpacity={0.8}
-              onPress={() => handleBook(event)}
-            >
-              <View style={[styles.popularIconBox, { backgroundColor: `${colors.secondary}12` }]}>
-                <Ionicons name={event.imageIcon as any} size={22} color={colors.secondary} />
-              </View>
-              <View style={styles.popularInfo}>
-                <Text style={[styles.popularName, { color: colors.onSurface }]}>{event.name}</Text>
-                <Text style={[styles.popularMeta, { color: colors.onSurfaceVariant }]}>{event.date} · {event.venue}</Text>
-                <Text style={[styles.popularPrice, { color: colors.tertiary }]}>{event.price}</Text>
-              </View>
-              <TouchableOpacity 
-                onPress={() => handleBook(event)} 
-                activeOpacity={0.8}
-                style={[styles.bookActionBtn, { backgroundColor: colors.secondary }]}
-              >
-                <Text style={styles.bookActionText}>Book</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
-          {filteredEvents.length === 0 && (
+          {isFeedLoading ? (
+            <>
+              <SkeletonLoader />
+              <SkeletonLoader />
+              <SkeletonLoader />
+            </>
+          ) : (
+            filteredEvents.map((event, index) => (
+              <AnimatedEventCard
+                key={event.id}
+                event={event}
+                index={index}
+                onPress={() => handleBook(event)}
+                colors={colors}
+                shadows={shadows}
+              />
+            ))
+          )}
+          {!isFeedLoading && filteredEvents.length === 0 && (
             <View style={styles.noEventsContainer}>
               <Ionicons name="alert-circle-outline" size={48} color={colors.outline} />
               <Text style={[styles.noEventsText, { color: colors.onSurfaceVariant }]}>No events found matching filters.</Text>

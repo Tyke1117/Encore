@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
@@ -24,7 +25,7 @@ export default function CustomDrawerContent(
   }
 ) {
   const { navigation } = props ;
-  // const { currentUser, logout, setRole } = useAuth();
+  const { user, logout } = useAuth();
   const { colors } = useTheme();
 
   const state = props.state;
@@ -39,14 +40,15 @@ export default function CustomDrawerContent(
 
   const handleLogout = async () => {
     try {
-      navigation.replace('Login')
+      await logout();
+      (navigation as any).replace('Login');
     } catch (e) {
       console.error(e);
     }
   };
 
-  const name = 'User';
-  const email =  'user@encore.edu';
+  const name = user?.name || 'User';
+  const email = user?.email || 'No email';
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -89,25 +91,43 @@ export default function CustomDrawerContent(
       {/* Navigation List */}
       <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
         {/* Dynamic Workspace / Role Switcher */}
-       <View style={[styles.roleSwitchCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}>
-        <View style={styles.roleSwitchTextWrap}>
-          <Text style={[styles.roleLabel, { color: colors.onSurfaceVariant }]}>Active Workspace</Text>
-          <Text style={[styles.roleValue, { color: colors.onSurface }]}>
-            {props.isOrganizer ? 'Organizer Mode' : 'Attendee Mode'}
-          </Text>
-        </View>
-        <TouchableOpacity 
-          style={[styles.roleSwitchBtn, { backgroundColor: colors.secondaryContainer }]}
-          onPress={() => {
-            props.setIsOrganizer((prev) => !prev);
-            props.navigation.navigate('AppTabs', { screen: 'Home' });
-          }}
-          activeOpacity={0.8}
+        <View
+          style={[
+            styles.roleSwitchCard,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.outlineVariant,
+            },
+          ]}
         >
-          <Ionicons name="swap-horizontal" size={16} color={colors.secondary} />
-        </TouchableOpacity>
-      </View>
+          <View style={styles.roleSwitchTextWrap}>
+            <Text style={[styles.roleLabel, { color: colors.onSurfaceVariant }]}>
+              Active Workspace
+            </Text>
 
+            <Text style={[styles.roleValue, { color: colors.onSurface }]}>
+              {props.isOrganizer ? 'Organizer Mode' : 'Attendee Mode'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.roleSwitchBtn,
+              { backgroundColor: colors.secondaryContainer },
+            ]}
+            onPress={() => {
+              props.setIsOrganizer((prev) => !prev);
+              props.navigation.navigate('AppTabs', { screen: 'Home' });
+            }}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="swap-horizontal"
+              size={16}
+              color={colors.secondary}
+            />
+          </TouchableOpacity>
+        </View>
         <View style={styles.menuSection}>
           {menuItems.map((item) => {
             const isActive = item.isTab 
