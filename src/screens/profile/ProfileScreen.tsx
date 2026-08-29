@@ -68,6 +68,9 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 colors={[colors.secondaryContainer, colors.tertiaryContainer]}
                 style={styles.avatarGradient}
               >
+                <Text style={[styles.avatarInitials, { color: colors.secondary }]}>
+                  {name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                </Text>
               </LinearGradient>
             </View>
             <TouchableOpacity style={[styles.changeAvatarBtn, { backgroundColor: colors.secondary }]}>
@@ -149,24 +152,32 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           {/* Bio */}
           <View style={styles.formGroup}>
             <Text style={[styles.fieldLabel, { color: colors.onSurface }]}>Bio</Text>
-            <View style={[
-              styles.inputBox, 
-              styles.bioBox,
-              { backgroundColor: colors.surface, borderColor: colors.outlineVariant },
-              !isEditing && styles.readOnlyInput
-            ]}>
-              <Ionicons name="document-text-outline" size={18} color={colors.onSurfaceVariant} style={[styles.fieldIcon, { marginTop: 4 }]} />
-              <TextInput
-                style={[styles.textInput, styles.bioInput, { color: colors.onSurface }]}
-                value={bio}
-                onChangeText={setBio}
-                editable={isEditing}
-                multiline
-                numberOfLines={3}
-                placeholder="Write something about yourself..."
-                placeholderTextColor={colors.outline}
-              />
-            </View>
+            {isEditing ? (
+              <View style={[
+                styles.inputBox, 
+                styles.bioBox,
+                { backgroundColor: colors.surface, borderColor: colors.outlineVariant }
+              ]}>
+                <Ionicons name="document-text-outline" size={18} color={colors.onSurfaceVariant} style={[styles.fieldIcon, { marginTop: 4 }]} />
+                <TextInput
+                  style={[styles.textInput, styles.bioInput, { color: colors.onSurface }]}
+                  value={bio}
+                  onChangeText={setBio}
+                  multiline
+                  numberOfLines={3}
+                  placeholder="Write something about yourself..."
+                  placeholderTextColor={colors.outline}
+                />
+              </View>
+            ) : (
+              <View style={[
+                styles.bioDisplayCard,
+                { backgroundColor: colors.surface, borderColor: colors.outlineVariant }
+              ]}>
+                <Ionicons name="quote" size={20} color={colors.secondary} style={styles.quoteIcon} />
+                <Text style={[styles.bioDisplayText, { color: colors.onSurface }]}>{bio || 'No bio written yet.'}</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -339,6 +350,24 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
   },
+  bioDisplayCard: {
+    padding: spacing.md,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  quoteIcon: {
+    marginTop: -2,
+  },
+  bioDisplayText: {
+    flex: 1,
+    ...typography.bodyMd,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
 });
+
 
 export default ProfileScreen;

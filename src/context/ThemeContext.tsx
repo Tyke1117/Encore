@@ -21,7 +21,7 @@ const THEME_STORAGE_KEY = '@encore_user_theme';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeModeType>('system');
+  const [themeMode, setThemeModeState] = useState<ThemeModeType>('dark');
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load theme from storage on mount
@@ -33,8 +33,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
           setThemeModeState(savedTheme as ThemeModeType);
         } else {
-          // If no preference or legacy preference exists, default to 'system'
-          setThemeModeState('system');
+          // If no preference or legacy preference exists, default to 'dark'
+          setThemeModeState('dark');
         }
       } catch (e) {
         console.error('Failed to load theme preference', e);

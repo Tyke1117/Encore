@@ -1,72 +1,53 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, View, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
-  showText?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
-  const { colors } = useTheme();
+export const Logo: React.FC<LogoProps> = ({ size = 'md' }) => {
+  const { isDark } = useTheme();
 
   const getSizes = () => {
     switch (size) {
       case 'sm':
-        return { icon: 20, fontSize: 18, containerSize: 32 };
+        return { width: 90, height: 30 };
       case 'lg':
-        return { icon: 42, fontSize: 36, containerSize: 72 };
+        return { width: 180, height: 70 };
       default: // md
-        return { icon: 26, fontSize: 24, containerSize: 48 };
+        return { width: 130, height: 50 };
     }
   };
 
   const dims = getSizes();
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[colors.primary, colors.secondary, colors.tertiary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[
-          styles.logoIconBg,
-          { width: dims.containerSize, height: dims.containerSize, borderRadius: dims.containerSize / 2 }
-        ]}
-      >
-        <MaterialCommunityIcons name="music-circle" size={dims.icon} color="#ffffff" />
-      </LinearGradient>
-      {showText && (
-        <Text style={[styles.logoText, { fontSize: dims.fontSize, color: colors.onSurface }]}>
-          Encore
-        </Text>
-      )}
+    <View style={[styles.container, isDark && styles.darkBadge]}>
+      <Image
+        source={require('../../assets/logo.jpg')}
+        style={{ width: dims.width, height: dims.height }}
+        resizeMode="contain"
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    alignItems: 'center',
   },
-  logoIconBg: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  darkBadge: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  logoText: {
-    fontWeight: '900',
-    letterSpacing: -1.2,
-    fontStyle: 'italic',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
   },
 });
 
