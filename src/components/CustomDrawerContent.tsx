@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
@@ -22,7 +23,7 @@ import { typography } from '../theme/fonts';
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps){
   const { navigation } = props ;
-  // const { currentUser, logout, setRole } = useAuth();
+  const { user, logout } = useAuth();
   const { colors } = useTheme();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -36,12 +37,19 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
     activeTabName = (activeRoute.state.routeNames && activeRoute.state.routeNames[nestedIndex]) || 'Home';
   }
 
-  const performLogout = () => {
+  const performLogout = async () => {
     setIsLoggingOut(true);
-    setTimeout(() => {
+    try {
+      await logout();
+      setTimeout(() => {
+        setIsLoggingOut(false);
+        (navigation as any).replace('Login');
+      }, 1500);
+    } catch (e) {
+      console.error(e);
       setIsLoggingOut(false);
-      navigation.replace('Login');
-    }, 1500);
+      Alert.alert('Logout Failed', 'An error occurred while logging out.');
+    }
   };
 
   const handleLogout = () => {
@@ -55,8 +63,8 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
     );
   };
 
-  const name = 'User';
-  const email =  'user@encore.edu';
+  const name = user?.name || 'User';
+  const email = user?.email || 'No email';
   const initials = name
     .split(' ')
     .map((n) => n[0])
@@ -113,9 +121,6 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
           <TouchableOpacity 
             style={[styles.roleSwitchBtn, { backgroundColor: colors.secondaryContainer }]}
             onPress={() => {
-              // const targetRole = currentUser?.role === 'organizer' ? 'attendee' : 'organizer';
-              // setRole(targetRole);
-              // Navigate Home to make sure the tab views refresh
               props.navigation.navigate('AppTabs', { screen: 'Home' });
               props.navigation.closeDrawer();
             }}
