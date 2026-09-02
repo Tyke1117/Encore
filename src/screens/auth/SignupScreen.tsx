@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Logo from '../../components/Logo';
+
 
 
 import { colors } from '../../theme/colors';
@@ -31,14 +31,17 @@ import {
 } from '@react-native-firebase/auth';
 
 
+import { useAuth } from '../../context/AuthContext';
+
 interface SignupScreenProps {
   navigation: any;
 }
 
 export const SignupScreen: React.FC<SignupScreenProps> = ({ navigation }) => {
-  // const { signup } = useAuth();
+  const { setRole } = useAuth();
 
   // Input states
+  const [selectedRole, setSelectedRole] = useState<'attendee' | 'organizer'>('attendee');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
@@ -108,6 +111,7 @@ const handleSignup = async () => {
   setIsLoading(true);
 
   try {
+    await setRole(selectedRole);
     const userCredential = await createUserWithEmailAndPassword(
       getAuth(),
       userEmail,
@@ -143,17 +147,18 @@ const handleSignup = async () => {
   return (
     <SafeAreaView style={styles.safeContainer}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <KeyboardAvoidingView 
         style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
+        <ScrollView 
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Animated Header & Form */}
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: '100%' }}>
-            {/* Top Header */}
+            {/* Top Back and Header */}
             <View style={styles.headerContainer}>
               <TouchableOpacity 
                 onPress={() => navigation?.goBack()} 
@@ -162,13 +167,37 @@ const handleSignup = async () => {
               >
                 <MaterialCommunityIcons name="arrow-left" size={24} color={colors.onBackground} />
               </TouchableOpacity>
-              <Logo size="sm" />
+              
               <Text style={[styles.welcomeTitle, { marginTop: spacing.sm }]}>Create Account</Text>
               <Text style={styles.subtitle}>Sign up to search, find and book college events</Text>
             </View>
 
           {/* Form */}
           <View style={styles.formContainer}>
+            {/* Role Selector */}
+            <View style={styles.roleContainer}>
+              <TouchableOpacity
+                style={[styles.roleTab, selectedRole === 'attendee' && styles.roleTabActive]}
+                onPress={() => setSelectedRole('attendee')}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                <Text style={[styles.roleText, selectedRole === 'attendee' && styles.roleTextActive]}>
+                  Attendee
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleTab, selectedRole === 'organizer' && styles.roleTabActive]}
+                onPress={() => setSelectedRole('organizer')}
+                activeOpacity={0.8}
+                disabled={isLoading}
+              >
+                <Text style={[styles.roleText, selectedRole === 'organizer' && styles.roleTextActive]}>
+                  Organizer
+                </Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Full Name */}
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>Full Name</Text>
@@ -494,6 +523,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.secondary,
   },
+  roleContainer: { flexDirection: 'row', backgroundColor: colors.surfaceContainerLow, borderRadius: radius.button, padding: 4, marginBottom: spacing.md },
+  roleTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: radius.button - 2 },
+  roleTabActive: { backgroundColor: colors.surface, ...shadows.level1 },
+  roleText: { ...typography.labelMd, color: colors.onSurfaceVariant, fontWeight: '600' },
+  roleTextActive: { color: colors.secondary, fontWeight: '700' },
 });
 
 export default SignupScreen;

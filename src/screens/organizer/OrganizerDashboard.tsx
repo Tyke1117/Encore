@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { cleanupExpiredEvents } from '../../services/eventService';
 import { ColorsType } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
@@ -61,7 +63,11 @@ function initialsOf(name: string): string {
 
 function WelcomeHeader({ navigation }: { navigation: any }) {
   const { colors } = useTheme();
+  const { user } = useAuth();
   const styles = getStyles(colors);
+
+  const displayName = user?.name || 'Organizer';
+  const initials = initialsOf(displayName);
 
   return (
     <View style={styles.headerRow}>
@@ -76,11 +82,11 @@ function WelcomeHeader({ navigation }: { navigation: any }) {
           end={{ x: 1, y: 1 }}
           style={styles.avatarCircle}
         >
-          <Text style={styles.avatarText}></Text>
+          <Text style={styles.avatarText}>{initials}</Text>
         </LinearGradient>
         <View>
           <Text style={styles.greetingText}>Good afternoon,</Text>
-          <Text style={styles.nameText}>Organizer</Text>
+          <Text style={styles.nameText}>{displayName}</Text>
         </View>
       </TouchableOpacity>
       <TouchableOpacity 
@@ -255,6 +261,11 @@ function AIInsightCard() {
 export default function OrganizerDashboard({ navigation }: { navigation: any }) {
   const { colors, isDark } = useTheme();
   const styles = getStyles(colors);
+
+  useEffect(() => {
+    // Automatically purge expired events older than 2 days
+    cleanupExpiredEvents();
+  }, []);
 
   const stats: StatCardData[] = [
     { id: '1', label: 'Total Events', value: '18', icon: 'calendar-outline', tint: colors.primary },

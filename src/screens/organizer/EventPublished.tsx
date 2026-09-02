@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   StatusBar,
   Image,
   Alert,
+  BackHandler,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,6 +30,17 @@ export default function EventPublished({ route, navigation }: EventPublishedProp
   const styles = getStyles(colors);
 
   const { eventData } = route.params || {};
+
+  // Disable back navigation to event creation wizard once published
+  useEffect(() => {
+    const onBackPress = () => {
+      navigation.navigate('OrganizerDashboard');
+      return true; // Prevents default back behavior
+    };
+
+    const backSubscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSubscription.remove();
+  }, [navigation]);
 
   const handleClose = () => {
     navigation.navigate('OrganizerDashboard');

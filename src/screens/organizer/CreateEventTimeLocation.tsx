@@ -20,11 +20,34 @@ import { typography } from '../../theme/fonts';
 import { radius } from '../../theme/radius';
 import { spacing } from '../../theme/spacing';
 import { shadows } from '../../theme/shadows';
+import DatePickerModal from '../../components/DatePickerModal';
+import TimePickerModal from '../../components/TimePickerModal';
 
 interface CreateEventTimeLocationProps {
   route: any;
   navigation: any;
 }
+
+const getTodayFormatted = () => {
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const getSampleStartTime = () => {
+  const d = new Date();
+  let h = d.getHours() + 1;
+  if (h >= 24) h = 10;
+  return `${String(h).padStart(2, '0')}:00`;
+};
+
+const getSampleEndTime = (start: string) => {
+  const parts = start.split(':').map((x) => parseInt(x, 10));
+  const h = (parts[0] + 3) % 24;
+  return `${String(h).padStart(2, '0')}:00`;
+};
 
 export default function CreateEventTimeLocation({ route, navigation }: CreateEventTimeLocationProps) {
   const { colors, isDark } = useTheme();
@@ -32,13 +55,16 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
 
   const { eventData } = route.params || {};
 
-  const [startDate, setStartDate] = useState('24-10-2024');
-  const [startTime, setStartTime] = useState('19:00');
-  const [endDate, setEndDate] = useState('24-10-2024');
-  const [endTime, setEndTime] = useState('22:30');
+  const defaultStartTime = getSampleStartTime();
+  const [startDate, setStartDate] = useState(getTodayFormatted());
+  const [startTime, setStartTime] = useState(defaultStartTime);
+  const [endDate, setEndDate] = useState(getTodayFormatted());
+  const [endTime, setEndTime] = useState(getSampleEndTime(defaultStartTime));
   const [selectedDuration, setSelectedDuration] = useState('3 Hours');
   const [venueSearch, setVenueSearch] = useState('Digital Art Pavilion');
   const [isVirtual, setIsVirtual] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<'start' | 'end' | null>(null);
+  const [timePickerTarget, setTimePickerTarget] = useState<'start' | 'end' | null>(null);
 
   const durationOptions = ['1 Hour', '3 Hours', 'All Day'];
 
@@ -129,58 +155,50 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
           <View style={styles.timeRow}>
             <View style={[styles.timeCol, { marginRight: spacing.sm }]}>
               <Text style={styles.timeInputLabel}>Start Date</Text>
-              <View style={styles.timeInputBox}>
-                <TextInput
-                  style={styles.timeTextInput}
-                  value={startDate}
-                  onChangeText={setStartDate}
-                  placeholder="DD-MM-YYYY"
-                  placeholderTextColor={colors.outline}
-                />
-                <Icon name="calendar" size={16} color={colors.onSurfaceVariant} />
-              </View>
+              <TouchableOpacity
+                style={styles.timeInputBox}
+                onPress={() => setPickerTarget('start')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.timeTextInput, { lineHeight: 46 }]}>{startDate}</Text>
+                <Icon name="calendar" size={16} color={colors.secondary} />
+              </TouchableOpacity>
             </View>
             <View style={styles.timeCol}>
               <Text style={styles.timeInputLabel}>Start Time</Text>
-              <View style={styles.timeInputBox}>
-                <TextInput
-                  style={styles.timeTextInput}
-                  value={startTime}
-                  onChangeText={setStartTime}
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.outline}
-                />
-                <Icon name="clock" size={16} color={colors.onSurfaceVariant} />
-              </View>
+              <TouchableOpacity
+                style={styles.timeInputBox}
+                onPress={() => setTimePickerTarget('start')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.timeTextInput, { lineHeight: 46 }]}>{startTime}</Text>
+                <Icon name="clock" size={16} color={colors.secondary} />
+              </TouchableOpacity>
             </View>
           </View>
 
           <View style={[styles.timeRow, { marginTop: spacing.md }]}>
             <View style={[styles.timeCol, { marginRight: spacing.sm }]}>
               <Text style={styles.timeInputLabel}>End Date</Text>
-              <View style={styles.timeInputBox}>
-                <TextInput
-                  style={styles.timeTextInput}
-                  value={endDate}
-                  onChangeText={setEndDate}
-                  placeholder="DD-MM-YYYY"
-                  placeholderTextColor={colors.outline}
-                />
-                <Icon name="calendar" size={16} color={colors.onSurfaceVariant} />
-              </View>
+              <TouchableOpacity
+                style={styles.timeInputBox}
+                onPress={() => setPickerTarget('end')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.timeTextInput, { lineHeight: 46 }]}>{endDate}</Text>
+                <Icon name="calendar" size={16} color={colors.secondary} />
+              </TouchableOpacity>
             </View>
             <View style={styles.timeCol}>
               <Text style={styles.timeInputLabel}>End Time</Text>
-              <View style={styles.timeInputBox}>
-                <TextInput
-                  style={styles.timeTextInput}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  placeholder="HH:MM"
-                  placeholderTextColor={colors.outline}
-                />
-                <Icon name="clock" size={16} color={colors.onSurfaceVariant} />
-              </View>
+              <TouchableOpacity
+                style={styles.timeInputBox}
+                onPress={() => setTimePickerTarget('end')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.timeTextInput, { lineHeight: 46 }]}>{endTime}</Text>
+                <Icon name="clock" size={16} color={colors.secondary} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -292,6 +310,38 @@ export default function CreateEventTimeLocation({ route, navigation }: CreateEve
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Date Picker Calendar Modal */}
+      <DatePickerModal
+        visible={pickerTarget !== null}
+        title={pickerTarget === 'start' ? 'Select Start Date' : 'Select End Date'}
+        initialDateStr={pickerTarget === 'start' ? startDate : endDate}
+        onSelectDate={(newDate) => {
+          if (pickerTarget === 'start') {
+            setStartDate(newDate);
+            setEndDate(newDate);
+          } else {
+            setEndDate(newDate);
+          }
+        }}
+        onClose={() => setPickerTarget(null)}
+      />
+
+      {/* Time Picker Modal */}
+      <TimePickerModal
+        visible={timePickerTarget !== null}
+        title={timePickerTarget === 'start' ? 'Select Start Time' : 'Select End Time'}
+        initialTimeStr={timePickerTarget === 'start' ? startTime : endTime}
+        onSelectTime={(newTime) => {
+          if (timePickerTarget === 'start') {
+            setStartTime(newTime);
+            setEndTime(getSampleEndTime(newTime));
+          } else {
+            setEndTime(newTime);
+          }
+        }}
+        onClose={() => setTimePickerTarget(null)}
+      />
     </SafeAreaView>
   );
 }

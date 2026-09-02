@@ -7,7 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 // Import Auth Screens
 import SplashScreen from './src/screens/auth/SplashScreen';
@@ -27,7 +27,6 @@ import CreateEventTimeLocation from './src/screens/organizer/CreateEventTimeLoca
 import CreateEventTickets from './src/screens/organizer/CreateEventTickets';
 import EventPublished from './src/screens/organizer/EventPublished';
 
-
 // Import Core Tab & Settings Screens
 import HomeScreen from './src/screens/home/HomeScreen';
 import AIScreen from './src/screens/ai/AIScreen';
@@ -40,13 +39,14 @@ const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 
-import { getAuth } from '@react-native-firebase/auth';
-
-function AppTabs({ isOrganizer }: { isOrganizer: boolean }) {
+function AppTabs() {
   const { colors } = useTheme();
+  const { role } = useAuth();
+  const isOrganizer = role === 'organizer';
 
   return (
     <Tab.Navigator
+      key={role}
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
@@ -82,22 +82,17 @@ function AppTabs({ isOrganizer }: { isOrganizer: boolean }) {
 
 function AppDrawer() {
   const { colors } = useTheme();
-  const [isOrganizer, setIsOrganizer] = React.useState(false);
 
   return (
     <Drawer.Navigator
-      drawerContent={(props) => (
-        <CustomDrawerContent {...props} isOrganizer={isOrganizer} setIsOrganizer={setIsOrganizer} />
-      )}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         drawerType: 'slide',
         drawerStyle: { width: 280, backgroundColor: colors.background },
       }}
     >
-      <Drawer.Screen name="AppTabs">
-        {(props) => <AppTabs {...props} isOrganizer={isOrganizer} />}
-      </Drawer.Screen>
+      <Drawer.Screen name="AppTabs" component={AppTabs} />
       <Drawer.Screen name="Settings" component={SettingsScreen} />
       <Drawer.Screen name="ProfileScreen" component={ProfileScreen} />
     </Drawer.Navigator>
@@ -116,9 +111,7 @@ export default function App() {
               animation: 'slide_from_right',
             }}
           >
-            {/* Splash Intro — now also checks Firebase's restored
-                session and routes straight to AppDrawer if the user
-                is already logged in, instead of always going to Login. */}
+            {/* Splash Intro */}
             <Stack.Screen name="Splash" component={SplashScreen} />
 
             {/* Auth Screens */}
@@ -132,6 +125,7 @@ export default function App() {
 
             {/* Main App (Drawer Wrapper containing Tabs) */}
             <Stack.Screen name="AppDrawer" component={AppDrawer} />
+            <Stack.Screen name="OrganizerDashboard" component={AppDrawer} />
 
             {/* Organizer / Event Flow Screens */}
             <Stack.Screen name="CreateEventDetails" component={CreateEventDetails} />

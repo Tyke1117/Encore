@@ -9,9 +9,13 @@ import {
   SafeAreaView,
   StatusBar,
   Switch,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { publishEvent, CreateEventInputData } from '../../services/eventService';
 import { ColorsType } from '../../theme/colors';
 import { typography } from '../../theme/fonts';
 import { radius } from '../../theme/radius';
@@ -25,6 +29,7 @@ interface CreateEventTicketsProps {
 
 export default function CreateEventTickets({ route, navigation }: CreateEventTicketsProps) {
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const styles = getStyles(colors);
 
   const { eventData } = route.params || {};
@@ -35,19 +40,45 @@ export default function CreateEventTickets({ route, navigation }: CreateEventTic
   const [ticketName, setTicketName] = useState('General Admission');
   const [enableWaitlist, setEnableWaitlist] = useState(false);
   const [isTransferable, setIsTransferable] = useState(true);
+  const [isPublishing, setIsPublishing] = useState(false);
 
-  const handlePublish = () => {
-    navigation.navigate('EventPublished', {
-      eventData: {
-        ...eventData,
-        ticketType,
-        ticketPrice: ticketType === 'free' ? '0' : ticketPrice,
-        ticketQuantity,
-        ticketName,
-        enableWaitlist,
-        isTransferable,
-      },
-    });
+  const handlePublish = async () => {
+    if (isPublishing) return;
+
+    if (!user?.uid) {
+      Alert.alert('Authentication Error', 'You must be logged in to publish an event.');
+      return;
+    }
+
+    const combinedEventData: CreateEventInputData = {
+      ...eventData,
+      ticketType,
+      ticketPrice: ticketType === 'free' ? '0' : ticketPrice,
+      ticketQuantity,
+      ticketName,
+      enableWaitlist,
+      isTransferable,
+    };
+
+    setIsPublishing(true);
+
+    try {
+      const eventId = await publishEvent(combinedEventData, user.uid);
+      navigation.replace('EventPublished', {
+        eventData: {
+          ...combinedEventData,
+          id: eventId,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error publishing event to Firestore:', error);
+      Alert.alert(
+        'Publish Failed',
+        error?.message || 'Could not publish event. Please check your network and try again.'
+      );
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const adjustQuantity = (amount: number) => {
@@ -231,10 +262,24 @@ export default function CreateEventTickets({ route, navigation }: CreateEventTic
           <TouchableOpacity 
             onPress={handlePublish} 
             activeOpacity={0.8}
-            style={[styles.publishButton, { backgroundColor: colors.secondary, flexDirection: 'row' }]}
+            disabled={isPublishing}
+            style={[
+              styles.publishButton,
+              { backgroundColor: colors.secondary, flexDirection: 'row' },
+              isPublishing && { opacity: 0.75 },
+            ]}
           >
-            <Text style={styles.publishText}>Publish Event</Text>
-            <Icon name="check" size={16} color={colors.onPrimary} style={{ marginLeft: 8 }} />
+            {isPublishing ? (
+              <>
+                <ActivityIndicator size="small" color="#ffffff" style={{ marginRight: 8 }} />
+                <Text style={styles.publishText}>Publishing...</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.publishText}>Publish Event</Text>
+                <Icon name="check" size={16} color={colors.onPrimary} style={{ marginLeft: 8 }} />
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

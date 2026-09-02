@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
@@ -151,7 +152,11 @@ const AnimatedEventCard: React.FC<{
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
-  // const { currentUser } = useAuth();
+  const { user } = useAuth();
+  
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'U';
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -220,7 +225,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             end={{ x: 1, y: 1 }}
             style={styles.profileAvatar}
           >
-            
+            <Text style={styles.avatarInitialsText}>{initials}</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -228,7 +233,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Welcome Section */}
         <Text style={[styles.greetingText, { color: colors.onSurface }]}>
-          {/* Hi, {currentUser?.name ? currentUser.name.split(' ')[0] : 'User'} 👋 */}
+          Hi, {user?.name ? user.name.split(' ')[0] : 'Student'} 👋
         </Text>
         <Text style={[styles.subtitleText, { color: colors.onSurfaceVariant }]}>
           Find awesome student summits, hackathons, and concerts.
@@ -578,6 +583,11 @@ const styles = StyleSheet.create({
   },
   noEventsText: {
     ...typography.bodyMd,
+  },
+  avatarInitialsText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

@@ -22,7 +22,7 @@ import { shadows } from '../../theme/shadows';
 
 export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, role } = useAuth();
 
   const [name, setName] = useState(user?.name || 'User');
   const [email, setEmail] = useState(user?.email || '');
@@ -108,7 +108,9 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           </View>
 
           <Text style={[styles.profileName, { color: colors.onSurface }]}>{name}</Text>
-          <Text style={[styles.profileRole, { color: colors.onSurfaceVariant }]}>Event Organizer</Text>
+          <Text style={[styles.profileRole, { color: colors.onSurfaceVariant }]}>
+            {role === 'organizer' ? 'Event Organizer' : 'Attendee'}
+          </Text>
           {user?.emailVerified === false && (
             <View style={[styles.unverifiedBadge, { backgroundColor: colors.errorContainer }]}>
               <Text style={[styles.unverifiedText, { color: colors.onErrorContainer }]}>Email not verified</Text>

@@ -18,15 +18,11 @@ import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
 
-export default function CustomDrawerContent(
-  props: DrawerContentComponentProps & {
-    isOrganizer: boolean;
-    setIsOrganizer: React.Dispatch<React.SetStateAction<boolean>>;
-  }
-) {
-  const { navigation } = props ;
-  const { user, logout } = useAuth();
+export default function CustomDrawerContent(props: DrawerContentComponentProps){
+  const { navigation } = props;
+  const { user, logout, role, setRole } = useAuth();
   const { colors } = useTheme();
+  const isOrganizer = role === 'organizer';
 
   const state = props.state;
   const activeRoute = state.routes[state.index];
@@ -91,43 +87,26 @@ export default function CustomDrawerContent(
       {/* Navigation List */}
       <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
         {/* Dynamic Workspace / Role Switcher */}
-        <View
-          style={[
-            styles.roleSwitchCard,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.outlineVariant,
-            },
-          ]}
-        >
+        <View style={[styles.roleSwitchCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }]}>
           <View style={styles.roleSwitchTextWrap}>
-            <Text style={[styles.roleLabel, { color: colors.onSurfaceVariant }]}>
-              Active Workspace
-            </Text>
-
+            <Text style={[styles.roleLabel, { color: colors.onSurfaceVariant }]}>Active Workspace</Text>
             <Text style={[styles.roleValue, { color: colors.onSurface }]}>
-              {props.isOrganizer ? 'Organizer Mode' : 'Attendee Mode'}
+              {isOrganizer ? 'Organizer Mode' : 'Attendee Mode'}
             </Text>
           </View>
-
-          <TouchableOpacity
-            style={[
-              styles.roleSwitchBtn,
-              { backgroundColor: colors.secondaryContainer },
-            ]}
-            onPress={() => {
-              props.setIsOrganizer((prev) => !prev);
+          <TouchableOpacity 
+            style={[styles.roleSwitchBtn, { backgroundColor: colors.secondaryContainer }]}
+            onPress={async () => {
+              const newRole = isOrganizer ? 'attendee' : 'organizer';
+              await setRole(newRole);
               props.navigation.navigate('AppTabs', { screen: 'Home' });
             }}
             activeOpacity={0.8}
           >
-            <Ionicons
-              name="swap-horizontal"
-              size={16}
-              color={colors.secondary}
-            />
+            <Ionicons name="swap-horizontal" size={16} color={colors.secondary} />
           </TouchableOpacity>
         </View>
+
         <View style={styles.menuSection}>
           {menuItems.map((item) => {
             const isActive = item.isTab 

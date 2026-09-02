@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   categoryTab: {
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
-    borderRadius: radius.round,
+    borderRadius: radius.full,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',

@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import Logo from '../../components/Logo';
 
 
 import { colors } from '../../theme/colors';
@@ -33,6 +32,7 @@ import {
   signInWithCredential,
   signInWithEmailAndPassword,
 } from '@react-native-firebase/auth';
+import { useAuth } from '../../context/AuthContext';
 import { GOOGLE_WEB_CLIENT_ID } from '../../constants/firebaseConfig';
 
 interface LoginScreenProps {
@@ -40,7 +40,7 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
-  // const { login, loginWithGoogleCredential } = useAuth();
+  const { setRole } = useAuth();
   
   // Input states
   const [email, setEmail] = useState('');
@@ -96,6 +96,7 @@ const handleLogin = async () => {
   setIsLoading(true);
 
   try {
+    await setRole(selectedRole);
     await signInWithEmailAndPassword(getAuth(), userEmail, password);
     navigation.replace("AppDrawer");
   } catch (error: any) {
@@ -133,6 +134,7 @@ const handleLogin = async () => {
 
     const tokens = await GoogleSignin.getTokens();
     const googleCredential = GoogleAuthProvider.credential(idToken, tokens?.accessToken);
+    await setRole(selectedRole);
     await signInWithCredential(getAuth(), googleCredential);
 
     navigation.replace('AppDrawer');
@@ -190,8 +192,8 @@ const handleLogin = async () => {
           <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: '100%', alignItems: 'center' }}>
             {/* Top Logo and Header */}
             <View style={styles.headerContainer}>
-              <Logo size="lg" />
-              <Text style={styles.welcomeTitle}>Welcome Back</Text>
+              <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Encore</Text>        
+              <Text style={styles.welcomeTitle}>Welcome Back </Text>
               <Text style={styles.subtitle}>Log in to discover and manage premium events</Text>
             </View>
 
@@ -375,7 +377,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     ...shadows.level2,
   },
-  welcomeTitle: { ...typography.headlineLgMobile, color: colors.onBackground, fontWeight: '700', marginBottom: spacing.xs },
+  welcomeTitle: { ...typography.headlineMd, color: colors.onBackground, fontWeight: '700', marginBottom: spacing.xs },
   subtitle: { ...typography.bodyMd, color: colors.onSurfaceVariant, textAlign: 'center', paddingHorizontal: spacing.md },
   formContainer: { width: '100%' },
   inputWrapper: { marginBottom: spacing.md },
@@ -427,6 +429,13 @@ const styles = StyleSheet.create({
   roleTabActive: { backgroundColor: colors.surface, ...shadows.level1 },
   roleText: { ...typography.labelMd, color: colors.onSurfaceVariant, fontWeight: '600' },
   roleTextActive: { color: colors.secondary, fontWeight: '700' },
+  headerTitle: {
+    ...typography.headlineMd,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginTop: -2,
+    fontSize:30
+  },
 });
 
 export default LoginScreen;
