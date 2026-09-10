@@ -331,11 +331,11 @@ async function runIngestionPipeline({ parseApiKey, tmApiKey, citySlug = DEFAULT_
 }
 
 // =========================================================================
-// 1. Scheduled Ingestion Function (Daily at 4:00 AM IST)
+// 1. Scheduled Ingestion Function (Daily at 1:00 AM IST)
 // =========================================================================
 exports.ingestExternalEventsDaily = onSchedule(
   {
-    schedule: "0 4 * * *", // Everyday at 04:00 AM
+    schedule: "0 1 * * *", // Everyday at 01:00 AM IST
     timeZone: "Asia/Kolkata",
     secrets: [PARSE_BOT_API_KEY, TICKETMASTER_API_KEY],
     timeoutSeconds: 300,
