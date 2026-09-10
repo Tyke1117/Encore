@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // Events Collection Rules
+    // ==========================================
+    match /events/{eventId} {
+      // Any client can read events to discover them
+      allow read: if true;
+
+      // Clients can NEVER create, update, or delete external events.
+      // (External events are ingested strictly via Firebase Cloud Functions Admin SDK)
+      // Only authenticated organizers can manage their own organizer events.
+      allow create: if request.auth != null
+                    && request.resource.data.sourceType == 'organizer'
+                    && request.resource.data.organizerId == request.auth.uid;
+
+      allow update: if request.auth != null
+                    && resource.data.sourceType == 'organizer'
+                    && resource.data.organizerId == request.auth.uid
+                    && request.resource.data.sourceType == 'organizer';
+
+      allow delete: if request.auth != null
+                    && resource.data.sourceType == 'organizer'
+                    && resource.data.organizerId == request.auth.uid;
+    }
+
+    // ==========================================
+    // User Profile Rules
+    // ==========================================
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

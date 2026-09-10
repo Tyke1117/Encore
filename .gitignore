@@ -31,11 +31,24 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
+.env.local
+.env.production
+.env.development
+
+# Credentials and secrets
+serviceAccountKey.json
+*serviceAccountKey*.json
+functions/serviceAccountKey.json
 
 # typescript
 *.tsbuildinfo
 
+# functions dependencies
+functions/node_modules/
+
 # generated native folders
 /ios
 /android
+
