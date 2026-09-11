@@ -28,9 +28,10 @@ jobs:
           npm install
 
       - name: Run Event Ingestion
-        env:
-          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-          TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
-        run: |
-          cd functions
-          npm run ingest
+      env:
+        FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+        TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+        PARSE_BOT_API_KEY: ${{ secrets.PARSE_BOT_API_KEY }}
+      run: |
+        cd functions
+        npm run ingest
