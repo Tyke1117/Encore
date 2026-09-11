@@ -3,7 +3,7 @@ name: Daily Event Ingestion (Spark Plan)
 on:
   schedule:
     # Runs at 04:00 AM UTC (9:30 AM IST) every day
-    - cron: '0 4 * * *'
+    - cron: '30 9 * * *'
   # Allows manual run from GitHub Actions tab
   workflow_dispatch:
 
