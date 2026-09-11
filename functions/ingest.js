@@ -47,7 +47,6 @@ function initFirebase() {
       projectId: "encore-6a677",
     });
   } else {
-    // Default application credentials fallback
     console.log("[Firebase] Initializing with default project credentials (encore-6a677)...");
     admin.initializeApp({
       projectId: "encore-6a677",
@@ -59,13 +58,6 @@ function initFirebase() {
 
 const db = initFirebase();
 
-// Constants
-const PARSE_BOT_SCRAPER_ID = "c9d4d699-5bca-49af-a878-144ad05b0f5f";
-const DEFAULT_CITY_SLUG = process.env.BOOKMYSHOW_CITY_SLUG || "ahmedabad";
-const DEFAULT_CITY_NAME = "Ahmedabad";
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 function safeParseDate(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return null;
   const parsed = new Date(dateStr);
@@ -74,109 +66,11 @@ function safeParseDate(dateStr) {
 }
 
 /**
- * Fetch Parse.bot BookMyShow events with timeout and safe retries
- */
-async function fetchParseBotEvents(apiKey, citySlug = DEFAULT_CITY_SLUG) {
-  const url = `https://api.parse.bot/scraper/${PARSE_BOT_SCRAPER_ID}/get_events_list?city=${encodeURIComponent(
-    citySlug
-  )}`;
-
-  const maxRetries = 2;
-  let lastError = null;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(
-        `[Parse.bot] Fetching events for city "${citySlug}" (attempt ${attempt + 1}/${maxRetries + 1})...`
-      );
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "X-API-Key": apiKey,
-          "Accept": "application/json",
-        },
-        signal: AbortSignal.timeout(30000), // 30s timeout
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text().catch(() => "");
-        throw new Error(
-          `Parse.bot API returned status ${response.status} ${response.statusText}: ${errorBody}`
-        );
-      }
-
-      const json = await response.json();
-      const items = json?.data?.items || json?.items || [];
-      console.log(`[Parse.bot] Successfully fetched ${items.length} raw events.`);
-      return items;
-    } catch (err) {
-      lastError = err;
-      console.warn(
-        `[Parse.bot] Request attempt ${attempt + 1} failed: ${err.message}`
-      );
-      if (attempt < maxRetries) {
-        await sleep(2000 * (attempt + 1));
-      }
-    }
-  }
-
-  throw new Error(`Parse.bot fetch failed after ${maxRetries + 1} attempts: ${lastError?.message}`);
-}
-
-/**
- * Normalize a Parse.bot BookMyShow event into the standard Firestore schema
- */
-function normalizeParseBotEvent(item, cityName = DEFAULT_CITY_NAME) {
-  const externalId = item.event_code ? String(item.event_code).trim() : null;
-  if (!externalId) {
-    return null;
-  }
-
-  const category = item.genre
-    ? String(item.genre)
-        .split("|")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean)
-    : [];
-
-  const languages = item.language
-    ? String(item.language)
-        .split("|")
-        .map((s) => s.trim().toLowerCase())
-        .filter(Boolean)
-    : [];
-
-  const docId = `bms_${externalId}`;
-
-  const docData = {
-    title: item.title ? String(item.title).trim() : "Untitled Event",
-    description: item.description ? String(item.description).trim() : null,
-    category: category,
-    languages: languages,
-    startAt: safeParseDate(item.event_date),
-    city: cityName,
-    venue: item.venue ? String(item.venue).trim() : null,
-    imageUrl: item.poster_url ? String(item.poster_url).trim() : null,
-    registrationUrl: item.cta_url ? String(item.cta_url).trim() : null,
-    sourceUrl: item.cta_url ? String(item.cta_url).trim() : null,
-    source: "bookmyshow",
-    sourceType: "external",
-    externalId: externalId,
-    isExternal: true,
-    lastFetchedAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  };
-
-  return { docId, docData };
-}
-
-/**
- * Fetch Ticketmaster events (Optional)
+ * Fetch Ticketmaster events
  */
 async function fetchTicketmasterEvents(apiKey) {
   if (!apiKey || apiKey.trim() === "") {
-    console.log("[Ticketmaster] No API key configured. Skipping Ticketmaster ingestion.");
+    console.log("[Ticketmaster] No TICKETMASTER_API_KEY provided in environment.");
     return [];
   }
 
@@ -239,7 +133,7 @@ function normalizeTicketmasterEvent(item) {
     category: categories,
     languages: [],
     startAt: startAt,
-    city: venue?.city?.name || null,
+    city: venue?.city?.name || "Global",
     venue: venue?.name || null,
     imageUrl: imageUrl,
     registrationUrl: item.url || null,
@@ -263,7 +157,7 @@ async function writeEventsToFirestore(normalizedEvents) {
     return { written: 0 };
   }
 
-  const BATCH_SIZE = 400; // Under Firestore 500 limit
+  const BATCH_SIZE = 400;
   let totalWritten = 0;
 
   for (let i = 0; i < normalizedEvents.length; i += BATCH_SIZE) {
@@ -295,49 +189,33 @@ async function writeEventsToFirestore(normalizedEvents) {
  */
 async function main() {
   console.log("==================================================");
-  console.log("   Encore Event Ingestion (Spark / Standalone)    ");
+  console.log("   Encore Event Ingestion (Ticketmaster Source)   ");
   console.log("==================================================");
 
-  const parseApiKey = process.env.PARSE_BOT_API_KEY || process.env.PARSE_API_KEY;
   const tmApiKey = process.env.TICKETMASTER_API_KEY;
-  const citySlug = DEFAULT_CITY_SLUG;
 
-  if (!parseApiKey) {
-    console.error("❌ ERROR: PARSE_BOT_API_KEY is not set in environment or .env file.");
+  if (!tmApiKey || tmApiKey.trim() === "") {
+    console.error("❌ ERROR: TICKETMASTER_API_KEY is not set in environment or GitHub Secrets.");
+    console.log("Please add TICKETMASTER_API_KEY to your GitHub Secrets or .env file.");
     process.exit(1);
   }
 
   const normalizedEvents = [];
 
-  // 1. Parse.bot Fetch
+  // Ticketmaster Fetch
   try {
-    const rawBms = await fetchParseBotEvents(parseApiKey, citySlug);
-    const bmsNormalized = rawBms
-      .map((item) => normalizeParseBotEvent(item, DEFAULT_CITY_NAME))
+    const rawTm = await fetchTicketmasterEvents(tmApiKey);
+    const tmNormalized = rawTm
+      .map((item) => normalizeTicketmasterEvent(item))
       .filter(Boolean);
 
-    console.log(`✅ [Parse.bot] Normalized ${bmsNormalized.length} events.`);
-    normalizedEvents.push(...bmsNormalized);
+    console.log(`✅ [Ticketmaster] Normalized ${tmNormalized.length} events.`);
+    normalizedEvents.push(...tmNormalized);
   } catch (err) {
-    console.error("❌ [Parse.bot] Error during ingestion:", err.message);
+    console.warn("⚠️ [Ticketmaster] Warning during ingestion:", err.message);
   }
 
-  // 2. Ticketmaster Fetch (Optional)
-  if (tmApiKey) {
-    try {
-      const rawTm = await fetchTicketmasterEvents(tmApiKey);
-      const tmNormalized = rawTm
-        .map((item) => normalizeTicketmasterEvent(item))
-        .filter(Boolean);
-
-      console.log(`✅ [Ticketmaster] Normalized ${tmNormalized.length} events.`);
-      normalizedEvents.push(...tmNormalized);
-    } catch (err) {
-      console.warn("⚠️ [Ticketmaster] Warning during ingestion:", err.message);
-    }
-  }
-
-  // 3. Write to Firestore
+  // Write to Firestore
   if (normalizedEvents.length > 0) {
     console.log(`[Firestore] Writing ${normalizedEvents.length} events to 'events' collection...`);
     const { written } = await writeEventsToFirestore(normalizedEvents);
