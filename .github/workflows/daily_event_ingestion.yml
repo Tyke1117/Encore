@@ -3,7 +3,6 @@ name: Daily Event Ingestion (Spark Plan)
 on:
   schedule:
     - cron: '*/5 * * * *'
-      timezone: 'Asia/Kolkata'
   workflow_dispatch:
 
 jobs:
