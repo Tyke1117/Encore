@@ -298,7 +298,7 @@ async function main() {
   console.log("   Encore Event Ingestion (Spark / Standalone)    ");
   console.log("==================================================");
 
-  const parseApiKey = process.env.PARSE_BOT_API_KEY;
+  const parseApiKey = process.env.PARSE_BOT_API_KEY || process.env.PARSE_API_KEY;
   const tmApiKey = process.env.TICKETMASTER_API_KEY;
   const citySlug = DEFAULT_CITY_SLUG;
 

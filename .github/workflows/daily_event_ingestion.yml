@@ -30,7 +30,8 @@ jobs:
       - name: Run Event Ingestion
         env:
           FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
-          PARSE_BOT_API_KEY: ${{ secrets.PARSE_BOT_API_KEY }}
+          PARSE_BOT_API_KEY: ${{ secrets.PARSE_BOT_API_KEY || secrets.PARSE_API_KEY }}
+          PARSE_API_KEY: ${{ secrets.PARSE_API_KEY || secrets.PARSE_BOT_API_KEY }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
           BOOKMYSHOW_CITY_SLUG: ahmedabad
         run: |
