@@ -101,6 +101,60 @@ async function fetchTicketmasterEvents(apiKey) {
 }
 
 /**
+ * Automatic Event Category Classifier
+ */
+function classifyEvent(title = "", description = "", rawCategories = []) {
+  const text = `${title} ${description} ${rawCategories.join(" ")}`.toLowerCase();
+
+  const rules = [
+    {
+      category: "music",
+      keywords: ["music", "concert", "dj", "band", "sing", "live music", "orchestra", "singer", "edm", "rock", "jazz", "acoustic", "gig", "fest", "musical", "instrumental", "hip hop", "rap", "pop", "symphony", "qawwali", "bollywood night"]
+    },
+    {
+      category: "entertainment",
+      keywords: ["comedy", "stand-up", "standup", "theatre", "theater", "play", "magic", "circus", "improv", "movie", "screening", "show", "open mic", "drama", "laughter"]
+    },
+    {
+      category: "sports",
+      keywords: ["sport", "sports", "cricket", "football", "soccer", "marathon", "run", "race", "fitness", "yoga", "tournament", "match", "badminton", "esports", "gaming", "league", "zumba"]
+    },
+    {
+      category: "cultural",
+      keywords: ["art", "exhibition", "craft", "pottery", "painting", "workshop", "dance", "cultural", "heritage", "walk", "photography", "sculpture", "literature", "drawing", "exhibit"]
+    },
+    {
+      category: "tech",
+      keywords: ["tech", "technology", "conference", "hackathon", "meetup", "webinar", "developer", "coding", "software", "ai", "startup", "data", "cloud", "business", "networking", "summit"]
+    },
+    {
+      category: "food_nightlife",
+      keywords: ["food", "drink", "drinks", "dining", "wine", "beer", "tasting", "party", "club", "nightlife", "pub", "bazaar", "flea market", "culinary", "brunch", "cocktail", "bar"]
+    }
+  ];
+
+  const matched = new Set();
+  let primaryCategory = null;
+
+  for (const rule of rules) {
+    if (rule.keywords.some((k) => text.includes(k))) {
+      matched.add(rule.category);
+      if (!primaryCategory) primaryCategory = rule.category;
+    }
+  }
+
+  if (matched.size === 0) {
+    matched.add("cultural");
+    primaryCategory = "cultural";
+  }
+
+  return {
+    primaryCategory,
+    categories: Array.from(matched)
+  };
+}
+
+/**
  * Normalize Ticketmaster event
  */
 function normalizeTicketmasterEvent(item) {
@@ -109,14 +163,19 @@ function normalizeTicketmasterEvent(item) {
 
   const venue = item._embedded?.venues?.[0];
   const classifications = item.classifications?.[0];
-  const categories = [];
+  const rawCategories = [];
 
   if (classifications?.segment?.name) {
-    categories.push(classifications.segment.name.toLowerCase());
+    rawCategories.push(classifications.segment.name.toLowerCase());
   }
   if (classifications?.genre?.name) {
-    categories.push(classifications.genre.name.toLowerCase());
+    rawCategories.push(classifications.genre.name.toLowerCase());
   }
+
+  const title = item.name ? String(item.name).trim() : "Untitled Event";
+  const description = item.info || item.pleaseNote || "";
+
+  const { primaryCategory, categories } = classifyEvent(title, description, rawCategories);
 
   let imageUrl = null;
   if (Array.isArray(item.images) && item.images.length > 0) {
@@ -128,8 +187,9 @@ function normalizeTicketmasterEvent(item) {
   const docId = `tm_${externalId}`;
 
   const docData = {
-    title: item.name ? String(item.name).trim() : "Untitled Event",
-    description: item.info || item.pleaseNote || null,
+    title: title,
+    description: description || null,
+    primaryCategory: primaryCategory,
     category: categories,
     languages: [],
     startAt: startAt,

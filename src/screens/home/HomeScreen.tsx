@@ -201,7 +201,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   useEffect(() => {
     try {
-      const q = query(collection(db, 'events'), limit(100));
+      const q = query(collection(db, 'events'), limit(300));
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
@@ -234,10 +234,12 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const categories = [
     { key: 'all', label: 'All Events', icon: 'grid-outline' },
-    { key: 'tech', label: 'Tech', icon: 'desktop-outline' },
-    { key: 'cultural', label: 'Cultural', icon: 'sparkles-outline' },
     { key: 'music', label: 'Music', icon: 'musical-notes-outline' },
+    { key: 'entertainment', label: 'Comedy & Shows', icon: 'happy-outline' },
     { key: 'sports', label: 'Sports', icon: 'football-outline' },
+    { key: 'cultural', label: 'Arts & Culture', icon: 'sparkles-outline' },
+    { key: 'tech', label: 'Tech', icon: 'desktop-outline' },
+    { key: 'food_nightlife', label: 'Food & Nightlife', icon: 'fast-food-outline' },
   ];
 
   const filteredEvents = events.filter((event) => {
@@ -248,10 +250,14 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     
     let matchesCategory = selectedCategory === 'all';
     if (!matchesCategory) {
+      const sel = selectedCategory.toLowerCase();
       if (Array.isArray(event.category)) {
-        matchesCategory = event.category.some((c) => c.toLowerCase().includes(selectedCategory.toLowerCase()));
+        matchesCategory = event.category.some((c) => String(c).toLowerCase().includes(sel));
       } else if (typeof event.category === 'string') {
-        matchesCategory = event.category.toLowerCase().includes(selectedCategory.toLowerCase());
+        matchesCategory = event.category.toLowerCase().includes(sel);
+      }
+      if (!matchesCategory && (event as any).primaryCategory) {
+        matchesCategory = String((event as any).primaryCategory).toLowerCase().includes(sel);
       }
     }
     return matchesSearch && matchesCategory;
