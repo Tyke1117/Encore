@@ -322,12 +322,22 @@ export async function cleanupExpiredEvents(): Promise<number> {
     let deletedCount = 0;
 
     for (const doc of documents) {
+      const isExternal =
+        doc.fields?.isExternal?.booleanValue ||
+        doc.fields?.sourceType?.stringValue === 'external' ||
+        doc.name?.includes('tm_') ||
+        doc.name?.includes('bms_');
+
+      // Do NOT auto-delete external ingested events
+      if (isExternal) continue;
+
       const expiresAtVal =
         doc.fields?.expiresAt?.timestampValue ||
         doc.fields?.expiresAt?.stringValue;
 
       if (expiresAtVal) {
         const expiresTime = new Date(expiresAtVal).getTime();
+        // Purge only if expiration time is strictly past
         if (expiresTime <= nowTime) {
           const deleteUrl = `https://firestore.googleapis.com/v1/${doc.name}`;
           await fetch(deleteUrl, { method: 'DELETE', headers });

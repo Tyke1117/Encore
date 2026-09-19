@@ -1,0 +1,9 @@
+node_modules/
+.env
+data/raw/*.txt
+data/normalized/*.txt
+data/organizer/*.txt
+data/quarantine/*.txt
+data/reports/*.txt
+docs/API_Keys_Tracker.xlsx
+*.log
