@@ -157,9 +157,11 @@ function QuickActionButton({ item, navigation }: { item: QuickAction; navigation
   const handlePress = () => {
     if (item.label === 'Create Event') {
       navigation.navigate('CreateEventDetails');
+    } else if (item.label === 'Manage Events') {
+      navigation.navigate('MyEvents');
     } else if (item.label === 'Announcements' || item.label === 'Participants') {
       navigation.navigate('Notifications');
-    } else if (item.label === 'Analytics' || item.label === 'Manage Events') {
+    } else if (item.label === 'Analytics') {
       navigation.navigate('Settings');
     }
   };

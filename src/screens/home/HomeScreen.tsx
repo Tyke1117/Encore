@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
+import { useEvents } from '../../context/EventsContext';
 
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
@@ -28,7 +29,7 @@ const { width } = Dimensions.get('window');
 interface EventItem {
   id: string;
   name: string;
-  category: 'music' | 'tech' | 'cultural' | 'sports';
+  category: 'music' | 'tech' | 'cultural' | 'sports' | 'general';
   date: string;
   time: string;
   venue: string;
@@ -151,7 +152,7 @@ const AnimatedEventCard: React.FC<{
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
-  // const { currentUser } = useAuth();
+  const { events } = useEvents();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -174,7 +175,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     { key: 'sports', label: 'Sports', icon: 'football-outline' },
   ];
 
-  const filteredEvents = eventsList.filter((event) => {
+  const filteredEvents = events.filter((event) => {
     const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           event.venue.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
@@ -280,7 +281,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <>
             <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Trending Events</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingScroll}>
-              {eventsList.slice(0, 3).map((event) => (
+              {events.slice(0, 3).map((event) => (
                 <TouchableOpacity 
                   key={event.id}
                   style={[styles.trendingCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }, shadows.level2]}

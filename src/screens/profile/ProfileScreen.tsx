@@ -205,7 +205,7 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
                 styles.bioDisplayCard,
                 { backgroundColor: colors.surface, borderColor: colors.outlineVariant }
               ]}>
-                <Ionicons name="quote" size={20} color={colors.secondary} style={styles.quoteIcon} />
+                <Ionicons name="chatbox-outline" size={20} color={colors.secondary} style={styles.quoteIcon} />
                 <Text style={[styles.bioDisplayText, { color: colors.onSurface }]}>{bio || 'No bio written yet.'}</Text>
               </View>
             )}

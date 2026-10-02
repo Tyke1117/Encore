@@ -75,6 +75,8 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
 
   const menuItems = [
     { name: 'Home', label: 'Dashboard', icon: 'grid-outline' as const, isTab: true },
+    { name: 'MyEvents', label: 'My Events', icon: 'calendar-outline' as const, isTab: false },
+    { name: 'CertificateGenerationScreen', label: 'Certificates', icon: 'ribbon-outline' as const, isTab: false },
     { name: 'Profile', label: 'My Profile', icon: 'person-outline' as const, isTab: true },
     { name: 'Notifications', label: 'Notifications', icon: 'notifications-outline' as const, isTab: true },
     { name: 'Settings', label: 'Settings', icon: 'settings-outline' as const, isTab: false },

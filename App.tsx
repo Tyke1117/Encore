@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
+import { EventsProvider } from './src/context/EventsContext';
 
 // Import Auth Screens
 import SplashScreen from './src/screens/auth/SplashScreen';
@@ -22,10 +23,13 @@ import { PrivacyPolicyScreen } from './src/screens/auth/PrivacyPolicyScreen';
 
 // Import Organizer / Event Screens
 import OrganizerDashboard from './src/screens/organizer/OrganizerDashboard';
+import MyEventsScreen from './src/screens/organizer/MyEventsScreen';
 import CreateEventDetails from './src/screens/organizer/CreateEventDetails';
 import CreateEventTimeLocation from './src/screens/organizer/CreateEventTimeLocation';
 import CreateEventTickets from './src/screens/organizer/CreateEventTickets';
 import EventPublished from './src/screens/organizer/EventPublished';
+import { CertificateGenerationScreen } from './src/screens/certificate/CertificateGenerationScreen';
+import { CertificatePreviewScreen } from './src/screens/certificate/CertificatePreviewScreen';
 
 
 // Import Core Tab & Settings Screens
@@ -35,21 +39,25 @@ import ProfileScreen from './src/screens/profile/ProfileScreen';
 import NotificationScreen from './src/screens/settings/NotificationScreen';
 import SettingsScreen from './src/screens/settings/SettingsScreen';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
+import { Platform } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
-
-import { getAuth } from '@react-native-firebase/auth';
 
 function AppTabs() {
   const { colors } = useTheme();
   const [isOrganizer, setIsOrganizer] = React.useState(false);
 
   React.useEffect(() => {
-    const user = getAuth().currentUser;
-    // if you store role as a custom claim or in Firestore, fetch it here instead
-    // for now, defaulting to false (attendee) until you wire up role storage
+    try {
+      if (Platform.OS !== 'web') {
+        const { getAuth } = require('@react-native-firebase/auth');
+        const user = getAuth().currentUser;
+      }
+    } catch (e) {
+      console.warn('Firebase check skipped on web:', e);
+    }
     setIsOrganizer(false);
   }, []);
 
@@ -104,6 +112,8 @@ function AppDrawer() {
       }}
     >
       <Drawer.Screen name="AppTabs" component={AppTabs} />
+      <Drawer.Screen name="MyEvents" component={MyEventsScreen} />
+      <Drawer.Screen name="CertificateGenerationScreen" component={CertificateGenerationScreen} />
       <Drawer.Screen name="Settings" component={SettingsScreen} />
       <Drawer.Screen name="ProfileScreen" component={ProfileScreen} />
     </Drawer.Navigator>
@@ -114,39 +124,46 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName="Splash"
-            screenOptions={{
-              headerShown: false,
-              animation: 'slide_from_right',
-            }}
-          >
-            {/* Splash Intro — now also checks Firebase's restored
-                session and routes straight to AppDrawer if the user
-                is already logged in, instead of always going to Login. */}
-            <Stack.Screen name="Splash" component={SplashScreen} />
+        <EventsProvider>
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="Splash"
+              screenOptions={{
+                headerShown: false,
+                animation: 'slide_from_right',
+              }}
+            >
+              {/* Splash Intro — now also checks Firebase's restored
+                  session and routes straight to AppDrawer if the user
+                  is already logged in, instead of always going to Login. */}
+              <Stack.Screen name="Splash" component={SplashScreen} />
 
-            {/* Auth Screens */}
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
-            <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-            <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
-            <Stack.Screen name="Terms" component={TermsScreen} />
-            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+              {/* Auth Screens */}
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Signup" component={SignupScreen} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+              <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+              <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+              <Stack.Screen name="Terms" component={TermsScreen} />
+              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
 
-            {/* Main App (Drawer Wrapper containing Tabs) */}
-            <Stack.Screen name="AppDrawer" component={AppDrawer} />
+              {/* Main App (Drawer Wrapper containing Tabs) */}
+              <Stack.Screen name="AppDrawer" component={AppDrawer} />
 
-            {/* Organizer / Event Flow Screens */}
-            <Stack.Screen name="CreateEventDetails" component={CreateEventDetails} />
-            <Stack.Screen name="CreateEventTimeLocation" component={CreateEventTimeLocation} />
-            <Stack.Screen name="CreateEventTickets" component={CreateEventTickets} />
-            <Stack.Screen name="EventPublished" component={EventPublished} />
-           
-          </Stack.Navigator>
-        </NavigationContainer>
+              {/* Certificate Module Screens */}
+              <Stack.Screen name="CertificateGenerationScreen" component={CertificateGenerationScreen} />
+              <Stack.Screen name="CertificatePreviewScreen" component={CertificatePreviewScreen} />
+
+              {/* Organizer / Event Flow Screens */}
+              <Stack.Screen name="MyEvents" component={MyEventsScreen} />
+              <Stack.Screen name="CreateEventDetails" component={CreateEventDetails} />
+              <Stack.Screen name="CreateEventTimeLocation" component={CreateEventTimeLocation} />
+              <Stack.Screen name="CreateEventTickets" component={CreateEventTickets} />
+              <Stack.Screen name="EventPublished" component={EventPublished} />
+            
+            </Stack.Navigator>
+          </NavigationContainer>
+        </EventsProvider>
       </AuthProvider>
     </ThemeProvider>
   );
