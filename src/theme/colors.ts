@@ -242,5 +242,5 @@ export const darkColors = {
   'surface-variant': '#2D2833',
 } as const;
 
-export const colors = lightColors;
+export const colors = darkColors;
 export type ColorsType = typeof lightColors;

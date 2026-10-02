@@ -1,74 +1,88 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { getCurrentUserInfo, UserInfo } from '../services/userService';
+
+const DEFAULT_WEB_USER: UserInfo = {
+  uid: 'demo-user-123',
+  email: 'organizer@encore.app',
+  name: 'Demo Organizer',
+  photoURL: null,
+  emailVerified: true,
+};
 
 export type UserRole = 'attendee' | 'organizer';
 
 interface AuthContextType {
   user: UserInfo | null;
-  role: UserRole;
   loading: boolean;
-  setRole: (role: UserRole) => Promise<void>;
+  role: UserRole;
+  setRole: (role: UserRole) => void;
   logout: () => Promise<void>;
 }
 
-const ROLE_STORAGE_KEY = '@encore_user_role';
-
 const AuthContext = createContext<AuthContextType>({
-  user: null,
-  role: 'attendee',
-  loading: true,
-  setRole: async () => {},
+  user: DEFAULT_WEB_USER,
+  loading: false,
+  role: 'organizer',
+  setRole: () => {},
   logout: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserInfo | null>(null);
-  const [role, setRoleState] = useState<UserRole>('attendee');
-  const [loading, setLoading] = useState(true);
-
-  // Load persisted role from AsyncStorage on startup
-  useEffect(() => {
-    const loadRole = async () => {
-      try {
-        const savedRole = await AsyncStorage.getItem(ROLE_STORAGE_KEY);
-        if (savedRole === 'organizer' || savedRole === 'attendee') {
-          setRoleState(savedRole);
-        }
-      } catch (e) {
-        console.error('Failed to load user role from storage', e);
-      }
-    };
-    loadRole();
-  }, []);
+  const [user, setUser] = useState<UserInfo | null>(DEFAULT_WEB_USER);
+  const [loading, setLoading] = useState(false);
+  const [role, setRoleState] = useState<UserRole>('organizer');
 
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser ? getCurrentUserInfo(firebaseUser) : null);
+    if (Platform.OS === 'web') {
+      setUser(DEFAULT_WEB_USER);
       setLoading(false);
-    });
-    return unsubscribe;
+      return;
+    }
+
+    try {
+      const { getAuth, onAuthStateChanged } = require('@react-native-firebase/auth');
+      const auth = getAuth();
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser: any) => {
+        setUser(firebaseUser ? getCurrentUserInfo(firebaseUser) : DEFAULT_WEB_USER);
+        setLoading(false);
+      });
+
+      const safetyTimeout = setTimeout(() => {
+        setLoading(false);
+      }, 1500);
+
+      return () => {
+        unsubscribe();
+        clearTimeout(safetyTimeout);
+      };
+    } catch (e) {
+      console.warn('Native Firebase Auth listener fallback:', e);
+      setUser(DEFAULT_WEB_USER);
+      setLoading(false);
+    }
   }, []);
 
-  const setRole = async (newRole: UserRole) => {
+  const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
-    try {
-      await AsyncStorage.setItem(ROLE_STORAGE_KEY, newRole);
-    } catch (e) {
-      console.error('Failed to persist user role', e);
-    }
   };
 
   const logout = async () => {
-    await signOut(getAuth());
+    if (Platform.OS !== 'web') {
+      try {
+        const { getAuth, signOut } = require('@react-native-firebase/auth');
+        await signOut(getAuth());
+      } catch (e) {
+        console.warn('Logout fallback:', e);
+      }
+    }
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, setRole, logout }}>
+    <AuthContext.Provider value={{ user, loading, role, setRole, logout }}>
       {children}
     </AuthContext.Provider>
   );

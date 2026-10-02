@@ -11,15 +11,11 @@ import {
   Dimensions,
   Alert,
   Animated,
-  Image,
-  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { collection, onSnapshot, query, limit } from 'firebase/firestore';
-import { db } from '../../config/firebase';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useEvents } from '../../context/EventsContext';
 
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
@@ -32,38 +28,15 @@ const { width } = Dimensions.get('window');
 
 interface EventItem {
   id: string;
-  name?: string;
-  title?: string;
-  category: 'music' | 'tech' | 'cultural' | 'sports' | string | string[];
-  date?: string;
-  time?: string;
-  startAt?: any;
-  venue?: string;
-  price?: string;
-  seatsLeft?: number;
-  imageIcon?: string;
-  imageUrl?: string;
-  isExternal?: boolean;
-  registrationUrl?: string;
-  source?: string;
+  name: string;
+  category: 'music' | 'tech' | 'cultural' | 'sports' | 'general';
+  date: string;
+  time: string;
+  venue: string;
+  price: string;
+  seatsLeft: number;
+  imageIcon: string;
 }
-
-const getEventTitle = (event: EventItem) => event.name || event.title || 'Untitled Event';
-const getEventVenue = (event: EventItem) => event.venue || 'Venue TBA';
-const getEventPrice = (event: EventItem) => event.price || 'Free';
-const getEventDate = (event: EventItem) => {
-  if (event.date) return event.date;
-  if (event.startAt) {
-    if (typeof event.startAt.toDate === 'function') {
-      return event.startAt.toDate().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    }
-    const d = new Date(event.startAt);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-    }
-  }
-  return 'Date TBA';
-};
 
 const eventsList: EventItem[] = [
   {
@@ -150,11 +123,6 @@ const AnimatedEventCard: React.FC<{
     ]).start();
   }, [index, event.id]);
 
-  const title = getEventTitle(event);
-  const venue = getEventVenue(event);
-  const dateStr = getEventDate(event);
-  const priceStr = getEventPrice(event);
-
   return (
     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }], width: '100%' }}>
       <TouchableOpacity
@@ -163,16 +131,12 @@ const AnimatedEventCard: React.FC<{
         onPress={onPress}
       >
         <View style={[styles.popularIconBox, { backgroundColor: `${colors.secondary}12` }]}>
-          {event.imageUrl ? (
-            <Image source={{ uri: event.imageUrl }} style={{ width: 28, height: 28, borderRadius: 6 }} resizeMode="cover" />
-          ) : (
-            <Ionicons name={(event.imageIcon || 'calendar-outline') as any} size={22} color={colors.secondary} />
-          )}
+          <Ionicons name={event.imageIcon as any} size={22} color={colors.secondary} />
         </View>
         <View style={styles.popularInfo}>
-          <Text style={[styles.popularName, { color: colors.onSurface }]} numberOfLines={1}>{title}</Text>
-          <Text style={[styles.popularMeta, { color: colors.onSurfaceVariant }]} numberOfLines={1}>{dateStr} · {venue}</Text>
-          <Text style={[styles.popularPrice, { color: colors.tertiary }]}>{priceStr}</Text>
+          <Text style={[styles.popularName, { color: colors.onSurface }]}>{event.name}</Text>
+          <Text style={[styles.popularMeta, { color: colors.onSurfaceVariant }]}>{event.date} · {event.venue}</Text>
+          <Text style={[styles.popularPrice, { color: colors.tertiary }]}>{event.price}</Text>
         </View>
         <TouchableOpacity 
           onPress={onPress} 
@@ -188,40 +152,11 @@ const AnimatedEventCard: React.FC<{
 
 export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { colors, isDark } = useTheme();
-  const { user } = useAuth();
+  const { events } = useEvents();
   
-  const initials = user?.name
-    ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-    : 'U';
-  
-  const [events, setEvents] = useState<EventItem[]>(eventsList);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isFeedLoading, setIsFeedLoading] = useState(false);
-
-  useEffect(() => {
-    try {
-      const q = query(collection(db, 'events'), limit(300));
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          if (!snapshot.empty) {
-            const fetched = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            })) as EventItem[];
-            setEvents(fetched);
-          }
-        },
-        (error) => {
-          console.warn('Firestore events listener error:', error.message);
-        }
-      );
-      return () => unsubscribe();
-    } catch (e) {
-      console.warn('Error attaching Firestore events listener:', e);
-    }
-  }, []);
 
   const handleCategorySelect = (categoryKey: string) => {
     setIsFeedLoading(true);
@@ -234,67 +169,29 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const categories = [
     { key: 'all', label: 'All Events', icon: 'grid-outline' },
-    { key: 'music', label: 'Music', icon: 'musical-notes-outline' },
-    { key: 'entertainment', label: 'Comedy & Shows', icon: 'happy-outline' },
-    { key: 'sports', label: 'Sports', icon: 'football-outline' },
-    { key: 'cultural', label: 'Arts & Culture', icon: 'sparkles-outline' },
     { key: 'tech', label: 'Tech', icon: 'desktop-outline' },
-    { key: 'food_nightlife', label: 'Food & Nightlife', icon: 'fast-food-outline' },
+    { key: 'cultural', label: 'Cultural', icon: 'sparkles-outline' },
+    { key: 'music', label: 'Music', icon: 'musical-notes-outline' },
+    { key: 'sports', label: 'Sports', icon: 'football-outline' },
   ];
 
   const filteredEvents = events.filter((event) => {
-    const title = getEventTitle(event);
-    const venue = getEventVenue(event);
-    const matchesSearch = title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          venue.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    let matchesCategory = selectedCategory === 'all';
-    if (!matchesCategory) {
-      const sel = selectedCategory.toLowerCase();
-      if (Array.isArray(event.category)) {
-        matchesCategory = event.category.some((c) => String(c).toLowerCase().includes(sel));
-      } else if (typeof event.category === 'string') {
-        matchesCategory = event.category.toLowerCase().includes(sel);
-      }
-      if (!matchesCategory && (event as any).primaryCategory) {
-        matchesCategory = String((event as any).primaryCategory).toLowerCase().includes(sel);
-      }
-    }
+    const matchesSearch = event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          event.venue.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   const handleBook = (event: EventItem) => {
-    const title = getEventTitle(event);
-    const price = getEventPrice(event);
-
-    if (event.isExternal && event.registrationUrl) {
-      Alert.alert(
-        'External Event',
-        `Book tickets for "${title}" on ${event.source === 'bookmyshow' ? 'BookMyShow' : 'Ticketmaster'}?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open Booking Page',
-            onPress: () => {
-              Linking.openURL(event.registrationUrl!).catch(() =>
-                Alert.alert('Error', 'Could not open booking URL.')
-              );
-            },
-          },
-        ]
-      );
-      return;
-    }
-
     Alert.alert(
       'Book Ticket',
-      `Would you like to book a ticket for ${title}? (${price})`,
+      `Would you like to book a ticket for ${event.name}? (${event.price})`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm Booking',
           onPress: () => {
-            Alert.alert('Booking Confirmed!', `You have booked a slot for ${title}. Check your Notifications tab for updates.`);
+            Alert.alert('Booking Confirmed!', `You have booked a slot for ${event.name}. Check your Notifications tab for updates.`);
           },
         },
       ]
@@ -324,7 +221,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             end={{ x: 1, y: 1 }}
             style={styles.profileAvatar}
           >
-            <Text style={styles.avatarInitialsText}>{initials}</Text>
+            
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -332,7 +229,7 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Welcome Section */}
         <Text style={[styles.greetingText, { color: colors.onSurface }]}>
-          Hi, {user?.name ? user.name.split(' ')[0] : 'Student'} 👋
+          {/* Hi, {currentUser?.name ? currentUser.name.split(' ')[0] : 'User'} 👋 */}
         </Text>
         <Text style={[styles.subtitleText, { color: colors.onSurfaceVariant }]}>
           Find awesome student summits, hackathons, and concerts.
@@ -384,53 +281,42 @@ export const HomeScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <>
             <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Trending Events</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingScroll}>
-              {events.slice(0, 5).map((event) => {
-                const title = getEventTitle(event);
-                const dateStr = getEventDate(event);
-                const venueStr = getEventVenue(event);
-                const priceStr = getEventPrice(event);
-
-                return (
-                  <TouchableOpacity 
-                    key={event.id}
-                    style={[styles.trendingCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }, shadows.level2]}
-                    activeOpacity={0.9}
-                    onPress={() => handleBook(event)}
+              {events.slice(0, 3).map((event) => (
+                <TouchableOpacity 
+                  key={event.id}
+                  style={[styles.trendingCard, { backgroundColor: colors.surface, borderColor: colors.outlineVariant }, shadows.level2]}
+                  activeOpacity={0.9}
+                  onPress={() => handleBook(event)}
+                >
+                  <LinearGradient
+                    colors={[colors.secondary, colors.tertiary, colors.primary]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.cardGradientTop}
                   >
-                    <LinearGradient
-                      colors={[colors.secondary, colors.tertiary, colors.primary]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.cardGradientTop}
-                    >
-                      {event.imageUrl ? (
-                        <Image source={{ uri: event.imageUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-                      ) : (
-                        <Ionicons name={(event.imageIcon || 'sparkles-outline') as any} size={32} color="#ffffff" />
-                      )}
-                      <View style={styles.priceTag}>
-                        <Text style={styles.priceTagText}>{priceStr}</Text>
-                      </View>
-                    </LinearGradient>
-                    
-                    <View style={styles.cardBottom}>
-                      <Text style={[styles.cardTitle, { color: colors.onSurface }]} numberOfLines={1}>{title}</Text>
-                      <View style={styles.cardMetaRow}>
-                        <Ionicons name="calendar-outline" size={14} color={colors.onSurfaceVariant} />
-                        <Text style={[styles.cardMetaText, { color: colors.onSurfaceVariant }]}>{dateStr}</Text>
-                      </View>
-                      <View style={styles.cardMetaRow}>
-                        <Ionicons name="location-outline" size={14} color={colors.onSurfaceVariant} />
-                        <Text style={[styles.cardMetaText, { color: colors.onSurfaceVariant }]} numberOfLines={1}>{venueStr}</Text>
-                      </View>
-                      <View style={styles.cardProgressRow}>
-                        <Text style={[styles.seatsText, { color: colors.tertiary }]}>{event.seatsLeft ? `${event.seatsLeft} spots left!` : 'Available'}</Text>
-                        <Text style={[styles.bookBtnText, { color: colors.secondary }]}>Book Now →</Text>
-                      </View>
+                    <Ionicons name={event.imageIcon as any} size={32} color="#ffffff" />
+                    <View style={styles.priceTag}>
+                      <Text style={styles.priceTagText}>{event.price}</Text>
                     </View>
-                  </TouchableOpacity>
-                );
-              })}
+                  </LinearGradient>
+                  
+                  <View style={styles.cardBottom}>
+                    <Text style={[styles.cardTitle, { color: colors.onSurface }]} numberOfLines={1}>{event.name}</Text>
+                    <View style={styles.cardMetaRow}>
+                      <Ionicons name="calendar-outline" size={14} color={colors.onSurfaceVariant} />
+                      <Text style={[styles.cardMetaText, { color: colors.onSurfaceVariant }]}>{event.date}</Text>
+                    </View>
+                    <View style={styles.cardMetaRow}>
+                      <Ionicons name="location-outline" size={14} color={colors.onSurfaceVariant} />
+                      <Text style={[styles.cardMetaText, { color: colors.onSurfaceVariant }]} numberOfLines={1}>{event.venue}</Text>
+                    </View>
+                    <View style={styles.cardProgressRow}>
+                      <Text style={[styles.seatsText, { color: colors.tertiary }]}>{event.seatsLeft} spots left!</Text>
+                      <Text style={[styles.bookBtnText, { color: colors.secondary }]}>Book Now →</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
           </>
         )}
@@ -693,11 +579,6 @@ const styles = StyleSheet.create({
   },
   noEventsText: {
     ...typography.bodyMd,
-  },
-  avatarInitialsText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '700',
   },
 });
 
