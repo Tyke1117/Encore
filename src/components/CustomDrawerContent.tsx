@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {
   DrawerContentScrollView,
@@ -18,11 +20,12 @@ import { spacing } from '../theme/spacing';
 import { radius } from '../theme/radius';
 import { typography } from '../theme/fonts';
 
+
 export default function CustomDrawerContent(props: DrawerContentComponentProps){
-  const { navigation } = props;
-  const { user, logout, role, setRole } = useAuth();
+  const { navigation } = props ;
+  const { user, logout } = useAuth();
   const { colors } = useTheme();
-  const isOrganizer = role === 'organizer';
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const state = props.state;
   const activeRoute = state.routes[state.index];
@@ -34,13 +37,30 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
     activeTabName = (activeRoute.state.routeNames && activeRoute.state.routeNames[nestedIndex]) || 'Home';
   }
 
-  const handleLogout = async () => {
+  const performLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await logout();
-      (navigation as any).replace('Login');
+      setTimeout(() => {
+        setIsLoggingOut(false);
+        (navigation as any).replace('Login');
+      }, 1500);
     } catch (e) {
       console.error(e);
+      setIsLoggingOut(false);
+      Alert.alert('Logout Failed', 'An error occurred while logging out.');
     }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out of Encore?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log Out', style: 'destructive', onPress: performLogout },
+      ]
+    );
   };
 
   const name = user?.name || 'User';
@@ -52,8 +72,11 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
     .slice(0, 2)
     .toUpperCase();
 
+
   const menuItems = [
     { name: 'Home', label: 'Dashboard', icon: 'grid-outline' as const, isTab: true },
+    { name: 'MyEvents', label: 'My Events', icon: 'calendar-outline' as const, isTab: false },
+    { name: 'CertificateGenerationScreen', label: 'Certificates', icon: 'ribbon-outline' as const, isTab: false },
     { name: 'Profile', label: 'My Profile', icon: 'person-outline' as const, isTab: true },
     { name: 'Notifications', label: 'Notifications', icon: 'notifications-outline' as const, isTab: true },
     { name: 'Settings', label: 'Settings', icon: 'settings-outline' as const, isTab: false },
@@ -64,7 +87,10 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
       {/* Profile Header Banner with Premium Gradient */}
       <TouchableOpacity
         activeOpacity={0.9}
-        onPress={() => props.navigation.navigate('AppTabs', { screen: 'Profile' })}
+        onPress={() => {
+          props.navigation.navigate('AppTabs', { screen: 'Profile' });
+          props.navigation.closeDrawer();
+        }}
       >
         <LinearGradient
           colors={[colors.secondary, colors.tertiary, colors.primary]}
@@ -91,15 +117,14 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
           <View style={styles.roleSwitchTextWrap}>
             <Text style={[styles.roleLabel, { color: colors.onSurfaceVariant }]}>Active Workspace</Text>
             <Text style={[styles.roleValue, { color: colors.onSurface }]}>
-              {isOrganizer ? 'Organizer Mode' : 'Attendee Mode'}
+              {/* {currentUser?.role === 'organizer' ? 'Organizer Mode' : 'Attendee Mode'} */}
             </Text>
           </View>
           <TouchableOpacity 
             style={[styles.roleSwitchBtn, { backgroundColor: colors.secondaryContainer }]}
-            onPress={async () => {
-              const newRole = isOrganizer ? 'attendee' : 'organizer';
-              await setRole(newRole);
+            onPress={() => {
               props.navigation.navigate('AppTabs', { screen: 'Home' });
+              props.navigation.closeDrawer();
             }}
             activeOpacity={0.8}
           >
@@ -127,6 +152,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
                   } else {
                     props.navigation.navigate(item.name);
                   }
+                  props.navigation.closeDrawer();
                 }}
               >
                 <View style={[
@@ -162,6 +188,13 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps){
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
       </View>
+
+      {isLoggingOut && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }]}>
+          <ActivityIndicator size="large" color={colors.secondary} />
+          <Text style={{ marginTop: 16, color: '#ffffff', fontWeight: 'bold', fontSize: 16 }}>Logging you out...</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
