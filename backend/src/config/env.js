@@ -17,6 +17,9 @@ const env = {
   RSS_FEED_URLS: (process.env.RSS_FEED_URLS || '').split(',').map(s => s.trim()).filter(Boolean),
   ICS_FEED_URLS: (process.env.ICS_FEED_URLS || '').split(',').map(s => s.trim()).filter(Boolean),
 
+  BRABBLE_API_KEY: process.env.BRABBLE_API_KEY || '',
+  BRABBLE_API_URL: process.env.BRABBLE_API_URL || 'https://brabble.ai/api/listings',
+
   BOOKMYSHOW_ENABLED: process.env.BOOKMYSHOW_ENABLED === 'true',
   BOOKMYSHOW_REGIONS: (process.env.BOOKMYSHOW_REGIONS || 'BANG,NCR,MUMBAI').split(',').map(s => s.trim()).filter(Boolean),
 

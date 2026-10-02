@@ -8,6 +8,7 @@ const { fetchSportsDbEvents } = require('../connectors/sportsDbConnector');
 const { fetchRssEvents } = require('../connectors/rssConnector');
 const { fetchIcsEvents } = require('../connectors/icsConnector');
 const { fetchBookMyShowEvents } = require('../connectors/bookMyShowConnector');
+const { fetchBrabbleEvents } = require('../connectors/brabbleConnector');
 
 let syncLock = false;
 let lastSyncStatus = null;
@@ -29,6 +30,7 @@ async function runFullSync() {
       rss: { fetched: 0, valid: 0, quarantined: 0, duplicates: 0 },
       ics: { fetched: 0, valid: 0, quarantined: 0, duplicates: 0 },
       bookmyshow: { fetched: 0, valid: 0, quarantined: 0, duplicates: 0 },
+      brabble: { fetched: 0, valid: 0, quarantined: 0, duplicates: 0 },
     },
     organizerEventsIncluded: 0,
     finalUniqueEvents: 0,
@@ -43,7 +45,8 @@ async function runFullSync() {
     { name: 'sportsDb', fetch: fetchSportsDbEvents },
     { name: 'rss', fetch: fetchRssEvents },
     { name: 'ics', fetch: fetchIcsEvents },
-    { name: 'bookmyshow', fetch: fetchBookMyShowEvents }
+    { name: 'bookmyshow', fetch: fetchBookMyShowEvents },
+    { name: 'brabble', fetch: fetchBrabbleEvents }
   ];
 
   try {

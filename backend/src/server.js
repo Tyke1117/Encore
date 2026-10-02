@@ -12,6 +12,12 @@ async function start() {
     logger.info(`Server listening on port ${PORT}`);
     const sources = syncService.getSourcesStatus();
     logger.info(`Configured sources: ${JSON.stringify(sources)}`);
+
+    if (config.ENABLE_LOCAL_SCHEDULER) {
+      logger.info('ENABLE_LOCAL_SCHEDULER is true. Starting background auto-fetch cron...');
+      const startScheduler = require('./scheduler');
+      startScheduler();
+    }
   });
   
   return server;
