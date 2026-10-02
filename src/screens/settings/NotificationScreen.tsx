@@ -7,113 +7,103 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
-import { getCandidateNotifications, CandidateNotification } from '../../services/attendanceCertificateService';
 import Logo from '../../components/Logo';
 import { spacing } from '../../theme/spacing';
 import { radius } from '../../theme/radius';
 import { typography } from '../../theme/fonts';
 import { shadows } from '../../theme/shadows';
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  body: string;
-  timestamp: string;
-  type: 'reminder' | 'update' | 'alert' | 'certificate';
-  read: boolean;
-  certificateId?: string;
-}
-
-const initialNotifications: NotificationItem[] = [
-  {
-    id: '1',
-    title: '🎉 Certificate Issued: Encore Hackathon 2026',
-    body: 'Congratulations Alex Morgan! Your official Certificate of Participation has been issued (ID: CERT-1-CS-2026-01). Tap to view and download.',
-    timestamp: 'Just now',
-    type: 'certificate',
-    read: false,
-    certificateId: 'CERT-1-CS-2026-01',
-  },
-  {
-    id: '2',
-    title: 'Upcoming Hackathon starts in 1 hour!',
-    body: 'Get ready for Encore Hackathon 2026. The venue is CL-1 Auditorium.',
-    timestamp: '1h ago',
-    type: 'reminder',
-    read: false,
-  },
-  {
-    id: '3',
-    title: 'Venue Change: Cultural Night',
-    body: 'Cultural Night venue has been moved to the main Open Air Theatre.',
-    timestamp: '3h ago',
-    type: 'update',
-    read: false,
-  },
-  {
-    id: '4',
-    title: 'Registration Confirmed',
-    body: 'Bhavika Patel confirmed registration for AI/ML Workshop.',
-    timestamp: 'Yesterday',
-    type: 'reminder',
-    read: true,
-  },
-];
+import {
+  DynamicNotification,
+  getDynamicNotifications,
+  markNotificationAsRead,
+  clearAllNotifications,
+  triggerRegularNotificationCheck,
+} from '../../services/notificationService';
 
 export default function NotificationScreen({ navigation }: { navigation: any }) {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
-  const [selectedCategory, setSelectedCategory] = useState<'all' | 'certificate' | 'reminder' | 'update'>('all');
+  const [notifications, setNotifications] = useState<DynamicNotification[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<
+    'all' | 'certificate' | 'reminder' | 'update' | 'discount'
+  >('all');
+  const [refreshing, setRefreshing] = useState(false);
   const { colors, isDark } = useTheme();
 
   useEffect(() => {
-    loadDynamicNotifications();
+    loadNotifications();
+
+    // Trigger regular dynamic check on load to simulate live user notifications
+    triggerRegularNotificationCheck().then(() => loadNotifications());
+
+    // Setup periodic polling interval for dynamic notifications
+    const interval = setInterval(async () => {
+      await triggerRegularNotificationCheck();
+      await loadNotifications();
+    }, 15000); // Check every 15 seconds for regular live notifications
+
+    return () => clearInterval(interval);
   }, []);
 
-  const loadDynamicNotifications = async () => {
-    const list = await getCandidateNotifications();
-    if (list && list.length > 0) {
-      const formatted: NotificationItem[] = list.map((item) => ({
-        id: item.id,
-        title: item.title,
-        body: item.body,
-        timestamp: item.date,
-        type: 'certificate',
-        read: item.read,
-        certificateId: item.certificateId,
-      }));
-      setNotifications((prev) => [...formatted, ...prev]);
+  const loadNotifications = async () => {
+    const list = await getDynamicNotifications();
+    setNotifications(list);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await triggerRegularNotificationCheck();
+    await loadNotifications();
+    setRefreshing(false);
+  };
+
+  const handleNotificationPress = async (item: DynamicNotification) => {
+    await markNotificationAsRead(item.id);
+    await loadNotifications();
+
+    if (item.type === 'certificate' && item.certificateId) {
+      navigation.navigate('CertificatePreviewScreen', { certificateId: item.certificateId });
     }
+  };
+
+  const handleClearAll = async () => {
+    await clearAllNotifications();
+    setNotifications([]);
   };
 
   const filteredNotifications = notifications.filter((notif) => {
     return selectedCategory === 'all' || notif.type === selectedCategory;
   });
 
-  const toggleRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
-    );
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
-  const getIconName = (type: NotificationItem['type']) => {
+  const getIconName = (type: DynamicNotification['type']) => {
     switch (type) {
       case 'certificate':
         return 'ribbon-outline';
       case 'reminder':
         return 'time-outline';
+      case 'discount':
+        return 'pricetag-outline';
       case 'update':
         return 'sparkles-outline';
       case 'alert':
-        return 'alert-circle-outline';
       default:
         return 'notifications-outline';
+    }
+  };
+
+  const getIconColors = (type: DynamicNotification['type']) => {
+    switch (type) {
+      case 'certificate':
+        return { bg: colors.primaryContainer, color: colors.primary };
+      case 'discount':
+        return { bg: '#e8f5e9', color: '#2e7d32' };
+      case 'reminder':
+        return { bg: '#fff3e0', color: '#e65100' };
+      case 'update':
+      default:
+        return { bg: colors.secondaryContainer, color: colors.secondary };
     }
   };
 
@@ -128,11 +118,11 @@ export default function NotificationScreen({ navigation }: { navigation: any }) 
             <Ionicons name="menu-outline" size={24} color={colors.onSurface} />
           </TouchableOpacity>
           <Logo size="sm" />
-          <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Notifications</Text>
+          <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Live Notifications</Text>
         </View>
 
         {notifications.length > 0 && (
-          <TouchableOpacity onPress={clearAll}>
+          <TouchableOpacity onPress={handleClearAll}>
             <Text style={[styles.clearAllText, { color: colors.secondary }]}>Clear All</Text>
           </TouchableOpacity>
         )}
@@ -142,9 +132,10 @@ export default function NotificationScreen({ navigation }: { navigation: any }) 
       <View style={[styles.categoryContainer, { borderBottomColor: colors.outlineVariant }]}>
         {[
           { id: 'all', label: 'All' },
-          { id: 'certificate', label: 'Certificates' },
+          { id: 'discount', label: 'Discounts' },
           { id: 'reminder', label: 'Reminders' },
           { id: 'update', label: 'Updates' },
+          { id: 'certificate', label: 'Certificates' },
         ].map((tab) => {
           const isSelected = selectedCategory === tab.id;
           return (
@@ -176,60 +167,70 @@ export default function NotificationScreen({ navigation }: { navigation: any }) 
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.secondary]} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="notifications-off-outline" size={54} color={colors.outline} />
             <Text style={[styles.emptyTitle, { color: colors.onSurface }]}>No notifications</Text>
             <Text style={[styles.emptySubtitle, { color: colors.onSurfaceVariant }]}>
-              You're all caught up! New event updates and student certificates will appear here.
+              You're all caught up! New dynamic event alerts, announcements, and discounts will arrive regularly.
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => toggleRead(item.id)}
-            style={[
-              styles.notificationCard,
-              { backgroundColor: colors.surface, borderColor: colors.outlineVariant },
-              !item.read && { backgroundColor: colors.surfaceContainerLow, borderColor: colors.secondary },
-              shadows.level1,
-            ]}
-          >
-            <View style={[styles.iconContainer, { backgroundColor: item.type === 'certificate' ? colors.primaryContainer : colors.secondaryContainer }]}>
-              <Ionicons
-                name={getIconName(item.type)}
-                size={22}
-                color={item.type === 'certificate' ? colors.primary : colors.secondary}
-              />
-            </View>
+        renderItem={({ item }) => {
+          const iconTheme = getIconColors(item.type);
 
-            <View style={styles.textContainer}>
-              <View style={styles.titleRow}>
-                <Text style={[styles.title, { color: colors.onSurface }, !item.read && { fontWeight: '700' }]}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.timestamp, { color: colors.onSurfaceVariant }]}>
-                  {item.timestamp}
-                </Text>
+          return (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => handleNotificationPress(item)}
+              style={[
+                styles.notificationCard,
+                { backgroundColor: colors.surface, borderColor: colors.outlineVariant },
+                !item.read && { backgroundColor: colors.surfaceContainerLow, borderColor: colors.secondary },
+                shadows.level1,
+              ]}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: iconTheme.bg }]}>
+                <Ionicons name={getIconName(item.type)} size={20} color={iconTheme.color} />
               </View>
 
-              <Text style={[styles.body, { color: colors.onSurfaceVariant }]} numberOfLines={2}>
-                {item.body}
-              </Text>
-
-              {item.type === 'certificate' && (
-                <View style={styles.certActionBadge}>
-                  <Text style={[styles.certActionText, { color: colors.primary }]}>
-                    📜 Official Certificate Issued • Tap to View
+              <View style={styles.textContainer}>
+                <View style={styles.titleRow}>
+                  <Text
+                    style={[styles.title, { color: colors.onSurface }, !item.read && { fontWeight: '700' }]}
+                    numberOfLines={1}
+                  >
+                    {item.title}
                   </Text>
+                  <Text style={[styles.timestamp, { color: colors.onSurfaceVariant }]}>{item.timestamp}</Text>
                 </View>
-              )}
-            </View>
 
-            {!item.read && <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />}
-          </TouchableOpacity>
-        )}
+                <Text style={[styles.body, { color: colors.onSurfaceVariant }]} numberOfLines={2}>
+                  {item.body}
+                </Text>
+
+                {item.type === 'certificate' && (
+                  <View style={styles.actionBadge}>
+                    <Text style={[styles.actionBadgeText, { color: colors.primary }]}>
+                      📜 Official Certificate Issued • Tap to View
+                    </Text>
+                  </View>
+                )}
+
+                {item.type === 'discount' && (
+                  <View style={styles.actionBadge}>
+                    <Text style={[styles.actionBadgeText, { color: '#2e7d32' }]}>
+                      🏷️ Exclusive Ticket Offer • Tap for details
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {!item.read && <View style={[styles.unreadDot, { backgroundColor: colors.secondary }]} />}
+            </TouchableOpacity>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
   categoryTab: {
     paddingHorizontal: spacing.md,
@@ -327,10 +328,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  certActionBadge: {
+  actionBadge: {
     marginTop: spacing.xs,
   },
-  certActionText: {
+  actionBadgeText: {
     fontSize: 11,
     fontWeight: '700',
   },

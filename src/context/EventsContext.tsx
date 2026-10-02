@@ -131,6 +131,8 @@ const initialEvents: EventItem[] = [
   },
 ];
 
+import { notifyEventChangeAnnouncement } from '../services/announcementService';
+
 const EventsContext = createContext<EventsContextType | undefined>(undefined);
 
 export const EventsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -142,12 +144,32 @@ export const EventsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       id: Date.now().toString(),
     };
     setEvents((prev) => [newEvent, ...prev]);
+
+    notifyEventChangeAnnouncement('event_added', {
+      id: newEvent.id,
+      name: newEvent.name,
+      ticketPrice: newEvent.price,
+      eventDate: newEvent.date,
+      venue: newEvent.venue,
+      description: newEvent.description,
+    }).catch((e) => console.warn('Failed to publish event announcement:', e));
   };
 
   const updateEvent = (id: string, updatedData: Partial<EventItem>) => {
-    setEvents((prev) =>
-      prev.map((event) => (event.id === id ? { ...event, ...updatedData } : event))
-    );
+    setEvents((prev) => {
+      const target = prev.find((e) => e.id === id);
+      if (target) {
+        notifyEventChangeAnnouncement('event_modified', {
+          id,
+          name: updatedData.name || target.name,
+          ticketPrice: updatedData.price || target.price,
+          eventDate: updatedData.date || target.date,
+          venue: updatedData.venue || target.venue,
+          description: updatedData.description || target.description,
+        }).catch((e) => console.warn('Failed to publish update announcement:', e));
+      }
+      return prev.map((event) => (event.id === id ? { ...event, ...updatedData } : event));
+    });
   };
 
   const deleteEvent = (id: string) => {

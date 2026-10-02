@@ -39,6 +39,8 @@ import ProfileScreen from './src/screens/profile/ProfileScreen';
 import NotificationScreen from './src/screens/settings/NotificationScreen';
 import SettingsScreen from './src/screens/settings/SettingsScreen';
 import CustomDrawerContent from './src/components/CustomDrawerContent';
+import AnnouncementsScreen from './src/screens/announcements/AnnouncementsScreen';
+import AttendeeDashboardScreen from './src/screens/dashboard/AttendeeDashboardScreen';
 import { Platform } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -62,11 +64,16 @@ function AppTabs() {
   }, []);
 
   return (
-    <Tab.Navigator      screenOptions={({ route }) => ({
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'AttendeeDashboard') {
+            iconName = focused ? 'compass' : 'compass-outline';
+          } else if (route.name === 'Announcements') {
+            iconName = focused ? 'megaphone' : 'megaphone-outline';
           } else if (route.name === 'AI') {
             iconName = focused ? 'sparkles' : 'sparkles-outline';
           } else if (route.name === 'Notifications') {
@@ -81,15 +88,16 @@ function AppTabs() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.outlineVariant,
-          height: 100,
-          // marginBottom: 60,
+          height: 90,
           paddingTop: 8,
         },
         headerShown: false,
       })}
     >
       <Tab.Screen name="Home" component={isOrganizer ? OrganizerDashboard : HomeScreen} />
-  <Tab.Screen name="AI" component={AIScreen} />
+      <Tab.Screen name="AttendeeDashboard" component={AttendeeDashboardScreen} options={{ tabBarLabel: 'Hub' }} />
+      <Tab.Screen name="Announcements" component={AnnouncementsScreen} />
+      <Tab.Screen name="AI" component={AIScreen} />
       <Tab.Screen name="Notifications" component={NotificationScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
@@ -112,6 +120,8 @@ function AppDrawer() {
       }}
     >
       <Drawer.Screen name="AppTabs" component={AppTabs} />
+      <Drawer.Screen name="AttendeeDashboard" component={AttendeeDashboardScreen} />
+      <Drawer.Screen name="Announcements" component={AnnouncementsScreen} />
       <Drawer.Screen name="MyEvents" component={MyEventsScreen} />
       <Drawer.Screen name="CertificateGenerationScreen" component={CertificateGenerationScreen} />
       <Drawer.Screen name="Settings" component={SettingsScreen} />
@@ -133,9 +143,7 @@ export default function App() {
                 animation: 'slide_from_right',
               }}
             >
-              {/* Splash Intro — now also checks Firebase's restored
-                  session and routes straight to AppDrawer if the user
-                  is already logged in, instead of always going to Login. */}
+              {/* Splash Intro */}
               <Stack.Screen name="Splash" component={SplashScreen} />
 
               {/* Auth Screens */}
@@ -149,6 +157,10 @@ export default function App() {
 
               {/* Main App (Drawer Wrapper containing Tabs) */}
               <Stack.Screen name="AppDrawer" component={AppDrawer} />
+
+              {/* Feature Screens */}
+              <Stack.Screen name="Announcements" component={AnnouncementsScreen} />
+              <Stack.Screen name="AttendeeDashboard" component={AttendeeDashboardScreen} />
 
               {/* Certificate Module Screens */}
               <Stack.Screen name="CertificateGenerationScreen" component={CertificateGenerationScreen} />
