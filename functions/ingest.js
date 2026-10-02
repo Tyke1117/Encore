@@ -101,6 +101,86 @@ async function fetchTicketmasterEvents(apiKey) {
 }
 
 /**
+ * Fetch Brabble events
+ */
+async function fetchBrabbleEvents(apiKey) {
+  if (!apiKey || apiKey.trim() === "") {
+    console.log("[Brabble] No BRABBLE_API_KEY provided in environment.");
+    return [];
+  }
+
+  try {
+    console.log("[Brabble] Fetching upcoming hackathons & competitions...");
+    const url = process.env.BRABBLE_API_URL || "https://brabble.ai/api/listings?hub=hackathons&limit=50";
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "x-api-key": apiKey.trim(),
+        "Accept": "application/json",
+      },
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      console.warn(`[Brabble] API returned status ${response.status} ${response.statusText}`);
+      return [];
+    }
+
+    const json = await response.json();
+    const listings = Array.isArray(json) ? json : (json?.listings || json?.data || json?.events || []);
+    console.log(`[Brabble] Successfully fetched ${listings.length} raw listings.`);
+    return listings;
+  } catch (err) {
+    console.warn(`[Brabble] Ingestion warning: ${err.message}`);
+    return [];
+  }
+}
+
+function normalizeBrabbleEvent(item) {
+  const externalId = item.id || item._id || item.slug;
+  if (!externalId) return null;
+
+  const title = item.title || item.name || "Untitled Hackathon";
+  const description = item.description || item.summary || "";
+  const { primaryCategory, categories } = classifyEvent(title, description, ["tech", "hackathon", "competition"]);
+
+  let startAt = safeParseDate(item.startDate || item.startAt || item.deadline || item.submissionDeadline);
+  if (!startAt) {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    startAt = admin.firestore.Timestamp.fromDate(d);
+  }
+
+  const isOnline = item.isVirtual !== undefined ? Boolean(item.isVirtual) : (item.mode?.toLowerCase() === "online" || !item.venue);
+  const venue = isOnline ? "Online / Remote" : (item.venue || "Campus / Venue TBA");
+  const city = item.city || (isOnline ? "Online" : "National");
+
+  const docId = `brbl_${externalId}`;
+  const docData = {
+    title: title,
+    description: description || null,
+    primaryCategory: primaryCategory || "tech",
+    category: categories.length > 0 ? categories : ["tech"],
+    languages: [],
+    startAt: startAt,
+    city: city,
+    venue: venue,
+    imageUrl: item.image || item.banner || item.logo || null,
+    registrationUrl: item.registrationUrl || item.applyUrl || item.url || "https://brabble.ai",
+    sourceUrl: item.url || item.website || "https://brabble.ai",
+    source: "brabble",
+    sourceType: "external",
+    externalId: String(externalId),
+    isExternal: true,
+    lastFetchedAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
+
+  return { docId, docData };
+}
+
+/**
  * Automatic Event Category Classifier
  */
 function classifyEvent(title = "", description = "", rawCategories = []) {
@@ -249,30 +329,48 @@ async function writeEventsToFirestore(normalizedEvents) {
  */
 async function main() {
   console.log("==================================================");
-  console.log("   Encore Event Ingestion (Ticketmaster Source)   ");
+  console.log("   Encore Event Ingestion (Ticketmaster & Brabble)");
   console.log("==================================================");
 
   const tmApiKey = process.env.TICKETMASTER_API_KEY;
+  const brblApiKey = process.env.BRABBLE_API_KEY;
 
-  if (!tmApiKey || tmApiKey.trim() === "") {
-    console.error("❌ ERROR: TICKETMASTER_API_KEY is not set in environment or GitHub Secrets.");
-    console.log("Please add TICKETMASTER_API_KEY to your GitHub Secrets or .env file.");
+  if ((!tmApiKey || tmApiKey.trim() === "") && (!brblApiKey || brblApiKey.trim() === "")) {
+    console.error("❌ ERROR: Neither TICKETMASTER_API_KEY nor BRABBLE_API_KEY is set.");
+    console.log("Please add at least one API key to your .env file or environment.");
     process.exit(1);
   }
 
   const normalizedEvents = [];
 
   // Ticketmaster Fetch
-  try {
-    const rawTm = await fetchTicketmasterEvents(tmApiKey);
-    const tmNormalized = rawTm
-      .map((item) => normalizeTicketmasterEvent(item))
-      .filter(Boolean);
+  if (tmApiKey && tmApiKey.trim() !== "") {
+    try {
+      const rawTm = await fetchTicketmasterEvents(tmApiKey);
+      const tmNormalized = rawTm
+        .map((item) => normalizeTicketmasterEvent(item))
+        .filter(Boolean);
 
-    console.log(`✅ [Ticketmaster] Normalized ${tmNormalized.length} events.`);
-    normalizedEvents.push(...tmNormalized);
-  } catch (err) {
-    console.warn("⚠️ [Ticketmaster] Warning during ingestion:", err.message);
+      console.log(`✅ [Ticketmaster] Normalized ${tmNormalized.length} events.`);
+      normalizedEvents.push(...tmNormalized);
+    } catch (err) {
+      console.warn("⚠️ [Ticketmaster] Warning during ingestion:", err.message);
+    }
+  }
+
+  // Brabble Fetch
+  if (brblApiKey && brblApiKey.trim() !== "") {
+    try {
+      const rawBrbl = await fetchBrabbleEvents(brblApiKey);
+      const brblNormalized = rawBrbl
+        .map((item) => normalizeBrabbleEvent(item))
+        .filter(Boolean);
+
+      console.log(`✅ [Brabble] Normalized ${brblNormalized.length} events.`);
+      normalizedEvents.push(...brblNormalized);
+    } catch (err) {
+      console.warn("⚠️ [Brabble] Warning during ingestion:", err.message);
+    }
   }
 
   // Write to Firestore
